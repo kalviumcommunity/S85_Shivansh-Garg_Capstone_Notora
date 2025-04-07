@@ -56,7 +56,7 @@ The platform offers both **free** and **premium** note sections, making it easie
 - **Authentication:** JWT, bcrypt
 - **File Handling:** Multer / Base64 Encoding
 - **OCR API:** (to be selected - e.g., OCR.space or Tesseract via external API)
-- **Deployment:** Render / Railway / Vercel
+- **Deployment:** Render / Vercel
 
 ---
 
