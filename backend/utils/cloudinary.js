@@ -1,4 +1,3 @@
-// utils/cloudinary.js
 const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
@@ -11,13 +10,12 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "notora_notes", // Cloud folder name
-    resource_type: "auto",  // auto for all file types (pdf, images, etc.)
+    folder: "notora",
+    allowed_formats: ["pdf", "jpg", "png", "docx"],
+    public_id: (req, file) => {
+      return `${Date.now()}-${file.originalname}`;
+    },
   },
 });
 
-
-module.exports = {
-  cloudinary,
-  storage,
-};
+module.exports = { cloudinary, storage };
