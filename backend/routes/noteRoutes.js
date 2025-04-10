@@ -4,7 +4,10 @@ const multer = require("multer");
 const { storage } = require("../utils/cloudinary");
 const upload = multer({ storage });
 
-const { getAllNotes, uploadNote, updateNote } = require("../controllers/noteController");
+const { getAllNotes, uploadNote, updateNote, getNoteById } = require("../controllers/noteController");
+
+
+router.get("/notes/:id", getNoteById);
 
 router.get("/notes", getAllNotes);
 
