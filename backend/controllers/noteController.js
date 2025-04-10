@@ -26,7 +26,7 @@ const uploadNote = async (req, res) => {
       return res.status(400).json({ error: "Title is required and should be at least 3 characters long." });
     }
 
-    if (!description || typeof description !== 'string' || description.trim().length < 10) {
+    if (!description || typeof description !== 'string' || description.trim().length < 5) {
       return res.status(400).json({ error: "Description is required and should be at least 10 characters long." });
     }
 
@@ -60,6 +60,44 @@ const uploadNote = async (req, res) => {
   }
 };
 
+const updateNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, subject } = req.body;
+
+    const updateData = {};
+
+    if (title && typeof title === 'string' && title.trim().length >= 3) {
+      updateData.title = title.trim();
+    }
+
+    if (description && typeof description === 'string' && description.trim().length >= 5) {
+      updateData.description = description.trim();
+    }
+
+    if (subject && typeof subject === 'string') {
+      updateData.subject = subject.trim().toLowerCase();
+    }
+
+    // If a new file is uploaded, update the fileUrl too
+    if (req.file) {
+      updateData.fileUrl = req.file.path;
+    }
+
+    const updatedNote = await Note.findByIdAndUpdate(id, updateData, { new: true });
+
+    if (!updatedNote) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    res.status(200).json({ message: "Note updated successfully", note: updatedNote });
+
+  } catch (err) {
+    console.error("UPDATE ERROR >>>", err);
+    res.status(500).json({ error: err.message || "Failed to update note" });
+  }
+};
 
 
-module.exports = { getAllNotes, uploadNote };
+
+module.exports = { getAllNotes, uploadNote, updateNote };
