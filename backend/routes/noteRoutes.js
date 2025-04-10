@@ -4,19 +4,13 @@ const multer = require("multer");
 const { storage } = require("../utils/cloudinary");
 const upload = multer({ storage });
 
-const { getAllNotes, uploadNote } = require("../controllers/noteController");
+const { getAllNotes, uploadNote, updateNote } = require("../controllers/noteController");
 
 router.get("/notes", getAllNotes);
 
-router.post("/notes/upload", (req, res, next) => {
-    upload.single("file")(req, res, function (err) {
-      if (err) {
-        console.error("Multer Error:", err);
-        return res.status(400).json({ error: err.message });
-      }
-      uploadNote(req, res);
-    });
-  });
-  
+router.post("/notes/upload", upload.single("file"), uploadNote);
+
+router.put("/notes/update/:id", upload.single("file"), updateNote);
+
 
 module.exports = router;
