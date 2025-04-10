@@ -1,5 +1,23 @@
 const Note = require("../models/Note");
 
+const getNoteById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const note = await Note.findById(id).populate("uploadedBy", "name email");
+
+    if (!note) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    res.status(200).json(note);
+  } catch (err) {
+    console.error("GET NOTE ERROR >>>", err);
+    res.status(500).json({ error: err.message || "Failed to fetch note" });
+  }
+};
+
+
 const getAllNotes = async (req, res) => {
   try {
     const { subject } = req.query;
@@ -100,4 +118,4 @@ const updateNote = async (req, res) => {
 
 
 
-module.exports = { getAllNotes, uploadNote, updateNote };
+module.exports = { getNoteById, getAllNotes, uploadNote, updateNote };
