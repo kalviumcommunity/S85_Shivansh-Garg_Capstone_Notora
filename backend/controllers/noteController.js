@@ -45,7 +45,7 @@ const uploadNote = async (req, res) => {
     }
 
     if (!description || typeof description !== 'string' || description.trim().length < 5) {
-      return res.status(400).json({ error: "Description is required and should be at least 10 characters long." });
+      return res.status(400).json({ error: "Description is required and should be at least 5 characters long." });
     }
 
     if (!subject || typeof subject !== 'string') {

@@ -15,5 +15,4 @@ router.post("/notes/upload", upload.single("file"), uploadNote);
 
 router.put("/notes/update/:id", upload.single("file"), updateNote);
 
-
 module.exports = router;
