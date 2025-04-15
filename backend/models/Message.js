@@ -7,6 +7,7 @@ const messageSchema = new mongoose.Schema({
     ref: "User", // Reference to User
     required: true,
   },
+
   message: { type: String, required: true },
 }, { timestamps: true });
 
