@@ -50,7 +50,8 @@ The platform offers both **free** and **premium** note sections, making it easie
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** React.js, Tailwind CSS
+- **Frontend:** React.js, Tailwind CSS  
+  🔗 **Frontend Live:** [https://shivansh-notora.netlify.app/](https://shivansh-notora.netlify.app/)
 - **Backend:** Node.js, Express.js  
   🔗 **Backend Live:** [https://s85-shivansh-garg-capstone-notora.onrender.com/](https://s85-shivansh-garg-capstone-notora.onrender.com/)
 - **Database:** MongoDB Atlas
@@ -58,7 +59,7 @@ The platform offers both **free** and **premium** note sections, making it easie
 - **File Handling:** Multer / Base64 Encoding
 - **OCR API:** (to be selected - e.g., OCR.space or Tesseract via external API)
 - **Deployment:** 
-  - **Frontend:** Render / Vercel  
+  - **Frontend:** Netlify  
   - **Backend:** [Render](https://s85-shivansh-garg-capstone-notora.onrender.com/)
 
 ---
