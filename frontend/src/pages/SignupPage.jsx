@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF, FaGithub } from "react-icons/fa";
 import { FiLock } from "react-icons/fi";
@@ -103,10 +104,11 @@ const SignupPage = () => {
           {/* Login Link */}
           <p className="text-center text-gray-500 text-sm mt-6">
             Already have an account?{' '}
-            <a href="/login" className="text-blue-500 hover:underline">
+            <Link to="/login" className="text-blue-500 hover:underline">
               Log In
-            </a>
+            </Link>
           </p>
+
         </div>
       </div>
     </div>
