@@ -69,13 +69,13 @@ const LoginPage = () => {
 
           {/* Form */}
           <form className="space-y-6">
-            <div>
+            {/* <div>
               <input
                 type="text"
                 placeholder="Full Name"
                 className="w-full border-b-2 border-gray-300 focus:border-[#9AC9DE] outline-none py-2 placeholder-gray-500 placeholder-opacity-10"
               />
-            </div>
+            </div> */}
             <div>
               <input
                 type="email"
@@ -103,7 +103,7 @@ const LoginPage = () => {
           {/* Login Link */}
           <p className="text-center text-gray-500 text-sm mt-6">
             Don't have an Account?{' '}
-            <a href="/login" className="text-blue-500 hover:underline">
+            <a href="/signup" className="text-blue-500 hover:underline">
               Sign up
             </a>
           </p>
