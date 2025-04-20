@@ -99,16 +99,21 @@ const updateNote = async (req, res) => {
       updateData.subject = subject.trim().toLowerCase();
     }
 
-    // If a new file is uploaded, update the fileUrl too
+    const existingNote = await Note.findById(id);
+    if (!existingNote) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    // If a new file is uploaded, delete the old one and update
     if (req.file) {
+      if (existingNote.cloudinaryId) {
+        await cloudinary.uploader.destroy(existingNote.cloudinaryId);
+      }
       updateData.fileUrl = req.file.path;
+      updateData.cloudinaryId = req.file.filename;
     }
 
     const updatedNote = await Note.findByIdAndUpdate(id, updateData, { new: true });
-
-    if (!updatedNote) {
-      return res.status(404).json({ error: "Note not found" });
-    }
 
     res.status(200).json({ message: "Note updated successfully", note: updatedNote });
 
