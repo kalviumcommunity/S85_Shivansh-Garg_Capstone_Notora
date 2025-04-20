@@ -1,4 +1,5 @@
 const Note = require("../models/Note");
+const cloudinary = require("cloudinary").v2;
 
 const getNoteById = async (req, res) => {
   try {
@@ -66,6 +67,7 @@ const uploadNote = async (req, res) => {
       subject: subject.trim().toLowerCase(),
       uploadedBy,
       fileUrl: req.file.path,
+      cloudinaryId: req.file.filename,
     });
 
     await newNote.save();
@@ -116,7 +118,29 @@ const updateNote = async (req, res) => {
   }
 };
 
+const deleteNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const note = await Note.findById(id);
+    if (!note) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    // Delete file from Cloudinary
+    if (note.cloudinaryId) {
+      await cloudinary.uploader.destroy(note.cloudinaryId);
+    }
+
+    // Delete note from DB
+    await note.deleteOne();
+
+    res.status(200).json({ message: "Note deleted successfully", note });
+  } catch (err) {
+    console.error("DELETE ERROR >>>", err);
+    res.status(500).json({ error: err.message || "Failed to delete note" });
+  }
+};
 
 
-
-module.exports = { getNoteById, getAllNotes, uploadNote, updateNote };
+module.exports = { getNoteById, getAllNotes, uploadNote, updateNote, deleteNote };
