@@ -1,2 +1,4 @@
-/.env
-S:\Coding\Kalvium\Notora\backend\node_modules
+# Example backend ignores
+.env
+node_modules/
+package-lock.json
