@@ -25,3 +25,8 @@ dist-ssr
 *.sw?
 
 S:\Coding\Kalvium\Notora\frontend\node_modules
+
+# Ignore frontend node package files
+package-lock.json
+package.json
+node_modules/
