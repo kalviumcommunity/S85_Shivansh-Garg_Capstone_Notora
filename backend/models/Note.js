@@ -7,6 +7,7 @@ const noteSchema = new mongoose.Schema(
     description: String,
     subject: String,
     fileUrl: String,
+    cloudinaryId: {type: String, required: true},
     isPremium: {
       type: Boolean,
       default: false,
