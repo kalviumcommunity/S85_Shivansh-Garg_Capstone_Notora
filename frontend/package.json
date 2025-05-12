@@ -21,8 +21,16 @@
     "vite": "^6.3.0"
   },
   "dependencies": {
+    "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/cli": "^4.1.4",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.1.4",
+    "aos": "^2.3.4",
+    "autoprefixer": "^10.4.21",
+    "framer-motion": "^12.7.4",
+    "lucide-react": "^0.503.0",
+    "postcss": "^8.5.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-icons": "^5.5.0",
