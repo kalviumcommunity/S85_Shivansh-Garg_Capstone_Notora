@@ -25,6 +25,12 @@ app.use(session({
   secret: process.env.SESSION_SECRET || "notora_secret_key",
   resave: false,
   saveUninitialized: true,
+    cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 24 * 60 * 60 * 1000
+  }
 }));
 
 app.use(passport.initialize());
