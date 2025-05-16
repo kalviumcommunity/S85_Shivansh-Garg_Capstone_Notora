@@ -60,10 +60,20 @@ const SignupPage = () => {
           {/* Social Buttons */}
           <div className="flex mb-6 space-x-3 flex-col items-center">
             <p className="text-sm font-medium text-gray-600 mb-4">Signup with</p>
+
+
             <div className="flex space-x-5">
-              <button className="p-3 rounded-full hover:bg-[#e6f3f9] hover:shadow-[0_0_20px_5px_rgba(156,201,222,0.7)] transition duration-300 ease-in-out">
-                <FcGoogle className="text-2xl" />
-              </button>
+              <a href="http://localhost:5000/api/auth/google">
+                <button
+                  className="p-3 rounded-full hover:bg-[#e6f3f9] hover:shadow-[0_0_20px_5px_rgba(156,201,222,0.7)] transition duration-300 ease-in-out"
+                  // title="Login with Google"
+                >
+                  <FcGoogle className="text-2xl" />
+                </button>
+              </a>
+
+
+
               <button className="p-3 rounded-full hover:bg-[#e6f0fb] hover:shadow-[0_0_20px_5px_rgba(24,119,242,0.7)] transition duration-300 ease-in-out">
                 <FaFacebookF className="text-2xl text-[#1877F2]" />
               </button>
