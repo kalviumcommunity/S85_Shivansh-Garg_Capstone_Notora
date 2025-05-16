@@ -1,17 +1,38 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF, FaGithub } from "react-icons/fa";
 import { FiLock } from "react-icons/fi";
 import { FaXTwitter } from "react-icons/fa6";
+import axios from "axios";
 
 const SignupPage = () => {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate();
+
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post("http://localhost:5000/api/auth/signup", {
+        name: fullName,
+        email,
+        password,
+      });
+      alert("Signup successful!");
+      navigate("/login");
+    } catch (err) {
+      console.error(err);
+      alert(err.response?.data?.message || "Signup failed.");
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row h-screen overflow-hidden">
 
       {/* Left Side */}
       <div className="w-full md:w-1/2 bg-[#9AC9DE] relative p-6 md:p-10 md:h-full">
-        {/* Logo & Tagline aligned top-left */}
         <div className="flex flex-col items-start">
           <img
             src="/assets/enhanced-Photoroom.png"
@@ -22,15 +43,12 @@ const SignupPage = () => {
             Simplify Your Study
           </p>
         </div>
-
-        {/* Abstract Illustration (Hide on small screens) */}
         <img
           src="/assets/loginpage.png"
           alt="Abstract Design"
           className="absolute top-1/2 left-[75%] transform -translate-x-1/2 -translate-y-1/2 w-10/12 max-w-lg hidden lg:block"
         />
       </div>
-
 
       {/* Right Side */}
       <div className="w-full md:w-1/2 flex items-center justify-center bg-white rounded-tl-lg rounded-bl-lg md:h-full">
@@ -41,10 +59,7 @@ const SignupPage = () => {
 
           {/* Social Buttons */}
           <div className="flex mb-6 space-x-3 flex-col items-center">
-            {/* Text Above Buttons */}
             <p className="text-sm font-medium text-gray-600 mb-4">Signup with</p>
-
-            {/* Buttons for Google, Facebook, GitHub, and X */}
             <div className="flex space-x-5">
               <button className="p-3 rounded-full hover:bg-[#e6f3f9] hover:shadow-[0_0_20px_5px_rgba(156,201,222,0.7)] transition duration-300 ease-in-out">
                 <FcGoogle className="text-2xl" />
@@ -68,19 +83,23 @@ const SignupPage = () => {
             <hr className="flex-1 border-t border-gray-300" />
           </div>
 
-          {/* Form */}
-          <form className="space-y-6">
+          {/* Signup Form */}
+          <form className="space-y-6" onSubmit={handleSignup}>
             <div>
               <input
                 type="text"
                 placeholder="Full Name"
-                className="w-full border-b-2 border-gray-300 focus:border-[#9AC9DE] outline-none py-2 placeholder-gray-500 placeholder-opacity-10"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full border-b-2 border-gray-300 focus:border-[#9AC9DE] outline-none py-2 placeholder-gray-500"
               />
             </div>
             <div>
               <input
                 type="email"
                 placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full border-b-2 border-gray-300 focus:border-[#9AC9DE] outline-none py-2 placeholder-gray-500"
               />
             </div>
@@ -88,6 +107,8 @@ const SignupPage = () => {
               <input
                 type="password"
                 placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full border-b-2 border-gray-300 focus:border-[#9AC9DE] outline-none py-2 placeholder-gray-500 pr-8"
               />
               <FiLock className="absolute right-0 bottom-2 text-gray-400" />
@@ -101,14 +122,13 @@ const SignupPage = () => {
             </button>
           </form>
 
-          {/* Login Link */}
+          {/* Link to login */}
           <p className="text-center text-gray-500 text-sm mt-6">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <Link to="/login" className="text-blue-500 hover:underline">
               Log In
             </Link>
           </p>
-
         </div>
       </div>
     </div>
