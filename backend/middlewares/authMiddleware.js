@@ -1,17 +1,20 @@
 const jwt = require("jsonwebtoken");
 
-const authMiddleware = (req, res, next) => {
-  const token = req.header("Authorization");
+function authMiddleware(req, res, next) {
+  const authHeader = req.header("Authorization") || "";
+  const [scheme, token] = authHeader.split(" ");
 
-  if (!token) return res.status(401).json({ message: "No token, access denied" });
+  if (scheme !== "Bearer" || !token) {
+    return res.status(401).json({ error: "Missing or malformed Authorization header" });
+  }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded.userId;
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = payload.userId;
     next();
-  } catch (error) {
-    res.status(401).json({ message: "Invalid token" });
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired token" });
   }
-};
+}
 
 module.exports = authMiddleware;
