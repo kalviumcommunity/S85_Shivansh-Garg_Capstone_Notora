@@ -4,7 +4,6 @@ const jwt = require("jsonwebtoken");
 
 const DEV = process.env.NODE_ENV === "development";
 
-// ———— Register New User ————
 exports.register = async (req, res) => {
   if (DEV) console.debug("🟢 [REGISTER] payload:", req.body);
   const { name, email, password } = req.body;
@@ -34,7 +33,6 @@ exports.register = async (req, res) => {
   }
 };
 
-// ———— Login Existing User ————
 exports.login = async (req, res) => {
   if (DEV) console.debug("🔵 [LOGIN] payload:", req.body);
   const { email, password } = req.body;
