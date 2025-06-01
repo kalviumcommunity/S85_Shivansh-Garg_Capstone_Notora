@@ -1,17 +1,38 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF, FaGithub } from "react-icons/fa";
 import { FiLock } from "react-icons/fi";
 import { FaXTwitter } from "react-icons/fa6";
+import axios from "axios";
 
 const LoginPage = () => {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const navigate = useNavigate();
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await axios.post("http://localhost:5000/api/auth/login", {
+                email,
+                password,
+            });
+            localStorage.setItem("token", response.data.token);
+            alert("Login successful!");
+            // navigate to dashboard or home page
+            navigate("/");
+        } catch (error) {
+            console.error("Login failed:", error.response?.data?.message || error.message);
+            alert("Invalid credentials or server error");
+        }
+    };
+
     return (
         <div className="flex flex-col md:flex-row h-screen overflow-hidden">
 
             {/* Left Side */}
             <div className="w-full md:w-1/2 bg-[#9AC9DE] relative p-6 md:p-10 md:h-full">
-                {/* Logo & Tagline aligned top-left */}
                 <div className="flex flex-col items-start">
                     <img
                         src="/assets/enhanced-Photoroom.png"
@@ -22,8 +43,6 @@ const LoginPage = () => {
                         Simplify Your Study
                     </p>
                 </div>
-
-                {/* Abstract Illustration (Hide on small screens) */}
                 <img
                     src="/assets/loginpage.png"
                     alt="Abstract Design"
@@ -31,24 +50,25 @@ const LoginPage = () => {
                 />
             </div>
 
-
             {/* Right Side */}
             <div className="w-full md:w-1/2 flex items-center justify-center bg-white rounded-tl-lg rounded-bl-lg md:h-full">
                 <div className="w-full max-w-[400px] bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 p-8 border border-gray-200">
-                    <h3 className="text-2xl font-bold text-center mb-6">
-                        Welcome Back!
-                    </h3>
+                    <h3 className="text-2xl font-bold text-center mb-6">Welcome Back!</h3>
 
                     {/* Social Buttons */}
                     <div className="flex mb-6 space-x-3 flex-col items-center">
-                        {/* Text Above Buttons */}
                         <p className="text-sm font-medium text-gray-600 mb-4">Sign in with</p>
-
-                        {/* Buttons for Google, Facebook, GitHub, and X */}
                         <div className="flex space-x-5">
-                            <button className="p-3 rounded-full hover:bg-[#e6f3f9] hover:shadow-[0_0_20px_5px_rgba(156,201,222,0.7)] transition duration-300 ease-in-out">
+
+
+                            <a
+                                href="http://localhost:5000/api/auth/google"
+                                className="p-3 rounded-full hover:bg-[#e6f3f9] hover:shadow-[0_0_20px_5px_rgba(156,201,222,0.7)] transition duration-300 ease-in-out"
+                            >
                                 <FcGoogle className="text-2xl" />
-                            </button>
+                            </a>
+
+
                             <button className="p-3 rounded-full hover:bg-[#e6f0fb] hover:shadow-[0_0_20px_5px_rgba(24,119,242,0.7)] transition duration-300 ease-in-out">
                                 <FaFacebookF className="text-2xl text-[#1877F2]" />
                             </button>
@@ -69,11 +89,13 @@ const LoginPage = () => {
                     </div>
 
                     {/* Form */}
-                    <form className="space-y-6">
+                    <form className="space-y-6" onSubmit={handleLogin}>
                         <div>
                             <input
                                 type="email"
                                 placeholder="Email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 className="w-full border-b-2 border-gray-300 focus:border-[#9AC9DE] outline-none py-2 placeholder-gray-500"
                             />
                         </div>
@@ -81,6 +103,8 @@ const LoginPage = () => {
                             <input
                                 type="password"
                                 placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 className="w-full border-b-2 border-gray-300 focus:border-[#9AC9DE] outline-none py-2 placeholder-gray-500 pr-8"
                             />
                             <FiLock className="absolute right-0 bottom-2 text-gray-400" />
