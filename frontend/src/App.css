@@ -1,7 +1,67 @@
 @import "tailwindcss";
 
-/* @media (max-width: 1023px) {
-    .abstract-img {
-      display: none;
-    }
-  } */
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
+
+/* @import "tailwindcss/preflight" */
+/* @tailwind utilities; */
+
+/* @import "tailwindcss/preflight"; */
+/* @import "tailwindcss/utilities"; */
+
+
+.gradient-text {
+  background: linear-gradient(90deg, #9ac9de 0%, #1f8ecd 100%);
+  background-clip: text;
+  -webkit-background-clip: text; /* For Safari */
+  color: transparent;
+  -webkit-text-fill-color: transparent; /* For Safari */
+}
+
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.glow-effect {
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+}
+.glow-effect::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.4),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: scale(0.5);
+  z-index: -1;
+}
+.glow-effect:hover::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.glass-effect,
+.hover-lift,
+.glow-effect {
+  transition: all 0.3s ease;
+}
