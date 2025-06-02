@@ -78,11 +78,18 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="text-center space-y-8 py-12">
         <div className="space-y-4">
-          <Badge className="px-4 py-2 text-sm font-medium" style={{ backgroundColor: "#9AC9DE33", color: "#1F1F1F" }}
->
+
+          {/* <Badge className="px-4 py-2 text-sm font-medium" style={{ backgroundColor: "#9AC9DE33", color: "#1F1F1F" }}>
+            <Sparkles className="w-4 h-4 mr-2" />
+            Simplified Learning Experience
+          </Badge> */}
+
+          <Badge variant="custom" className="px-4 py-2 text-sm font-medium">
             <Sparkles className="w-4 h-4 mr-2" />
             Simplified Learning Experience
           </Badge>
+
+
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
             Welcome to <span className="gradient-text">Notora</span>
           </h1>
@@ -191,9 +198,15 @@ export default function HomePage() {
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Badge className="text-white" style={{ backgroundColor: "#9AC9DE33", color: "#1F1F1F" }}>
+                      {/* <Badge className="text-white" style={{ backgroundColor: "#9AC9DE33", color: "#1F1F1F" }}>
+                        {announcement.type}
+                      </Badge> */}
+                      <Badge
+                        className=" bg-[#f4f7fa] text-[#ffffff]  dark:bg-[#d2d2d2] dark:text-[#ffffff]"
+                      >
                         {announcement.type}
                       </Badge>
+
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Calendar className="w-4 h-4 mr-1" />
                         {new Date(announcement.date).toLocaleDateString()}
