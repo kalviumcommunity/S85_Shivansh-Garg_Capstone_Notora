@@ -1,4 +1,4 @@
-// app.use("/auth", googleAuthRoutes);
+// app.use("/api/auth", googleAuthRoutes);
 
 const express = require("express");
 const passport = require("passport");
