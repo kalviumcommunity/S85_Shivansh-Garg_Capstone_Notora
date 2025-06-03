@@ -4,7 +4,7 @@ import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
-// import NotesPage from "./pages/NotesPage";
+import NotesPage from "./pages/NotesPage";
 // import PremiumPage from "./pages/PremiumPage";
 // import UploadPage from "./pages/UploadPage";
 
@@ -20,7 +20,7 @@ function AppContent() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        {/* <Route path="/notes" element={<NotesPage />} /> */}
+        <Route path="/notes" element={<NotesPage />} />
         {/* <Route path="/premium" element={<PremiumPage />} /> */}
         {/* <Route path="/upload" element={<UploadPage />} /> */}
       </Routes>
