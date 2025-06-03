@@ -25,6 +25,7 @@
     "vite": "^6.3.0"
   },
   "dependencies": {
+    "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.3",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/cli": "^4.1.4",

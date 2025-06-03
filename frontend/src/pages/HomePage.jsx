@@ -202,7 +202,7 @@ export default function HomePage() {
                         {announcement.type}
                       </Badge> */}
                       <Badge
-                        className=" bg-[#f4f7fa] text-[#ffffff]  dark:bg-[#d2d2d2] dark:text-[#ffffff]"
+                        className=" bg-[#4473a2] text-[#ffffff]  dark:bg-[#e2e2e2] dark:text-[#000000]"
                       >
                         {announcement.type}
                       </Badge>

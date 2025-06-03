@@ -160,12 +160,12 @@ const fetchUser = async () => {
                 )}
               </div>
             ) : (
-              <Link to="/login">
+              // <Link to="/login">
                 <Button variant="outline" className="space-x-2">
                   <User className="w-4 h-4" />
-                  <span>Login</span>
+                  {/* <span>Login</span> */}
                 </Button>
-              </Link>
+              // </Link>
             )}
           </div>
 
