@@ -1,24 +1,8 @@
 import React from "react";
 import { Button } from "../components/ui/Button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/Card";
+import {Card,CardContent,CardDescription,CardHeader,CardTitle,} from "../components/ui/Card";
 import { Badge } from "../components/ui/Badge";
-import {
-  BookOpen,
-  Users,
-  Download,
-  Upload,
-  Sparkles,
-  TrendingUp,
-  Calendar,
-  Bell,
-  Crown,
-} from "lucide-react";
+import {BookOpen,Users,Download,Upload,Sparkles,TrendingUp,Calendar,Bell,Crown,} from "lucide-react";
 import { Link } from "react-router-dom";
 
 const features = [
@@ -66,9 +50,9 @@ const announcements = [
 ];
 
 const stats = [
-  { label: "Active Users", value: "12,000+", icon: Users },
-  { label: "Notes Shared", value: "45,000+", icon: BookOpen },
-  { label: "Downloads", value: "180,000+", icon: Download },
+  { label: "Active Users", value: "50+", icon: Users },
+  { label: "Notes Shared", value: "200+", icon: BookOpen },
+  { label: "Downloads", value: "1000+", icon: Download },
   { label: "Success Rate", value: "95%", icon: TrendingUp },
 ];
 
