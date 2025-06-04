@@ -8,6 +8,8 @@ const User = require("../models/User");
 const redisClient = require("../utils/redisClient");
 const jwt = require('jsonwebtoken');
 
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
 router.post("/logout", async (req, res) => {
   const authHeader = req.header("Authorization") || "";
   const [scheme, token] = authHeader.split(" ");
