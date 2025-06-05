@@ -2,3 +2,7 @@
 .env
 node_modules/
 package-lock.json
+
+# Google Cloud credentials
+config/google-credentials.json
+**/google-credentials*.json

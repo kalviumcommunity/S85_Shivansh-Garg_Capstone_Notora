@@ -17,6 +17,7 @@ const noteRoutes = require("./routes/noteRoutes");
 const authRoutes = require("./routes/authRoutes");
 const googleAuthRoutes = require("./routes/googleAuthRoutes");
 const chatRoutes = require("./routes/chatRoutes");
+const ocrRoutes = require("./routes/ocrRoutes");
 
 require("./passport/google");
 
@@ -30,6 +31,9 @@ const io = new Server(httpServer, {
     allowedHeaders: ["Authorization"]
   }
 });
+
+// Set port
+const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB first
 mongoose.connect(process.env.MONGO_URI)
@@ -114,6 +118,7 @@ app.use("/api/notes", noteRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/auth", googleAuthRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/ocr", ocrRoutes);
 
 // Socket.IO connection handling
 io.use(async (socket, next) => {
@@ -124,7 +129,7 @@ io.use(async (socket, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const user = await User.findById(decoded.userId);
     
     if (!user) {
       return next(new Error("User not found"));
@@ -214,7 +219,6 @@ cron.schedule('0 0 * * *', async () => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

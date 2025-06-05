@@ -15,18 +15,27 @@ router.get(
   "/google/callback",
   passport.authenticate("google", { session: false }),
   (req, res) => {
+    console.log('Google callback user:', {
+      id: req.user._id,
+      email: req.user.email,
+      role: req.user.role
+    });
+
     const token = jwt.sign(
       { userId: req.user._id },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // Redirect to frontend with token and user data
+    // Include role in user data
     const userData = {
       id: req.user._id,
       name: req.user.name,
-      email: req.user.email
+      email: req.user.email,
+      role: req.user.role // Add role to the response
     };
+    
+    console.log('Sending user data:', userData);
     
     const queryParams = new URLSearchParams({
       token,

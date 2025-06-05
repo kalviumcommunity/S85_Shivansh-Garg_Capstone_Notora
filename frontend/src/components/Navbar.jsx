@@ -12,6 +12,7 @@ import {
   X,
   LogOut,
   Shield,
+  Scan,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
@@ -21,6 +22,7 @@ const getNavigation = (isAdmin) => {
     { name: "Home", href: "/", icon: Home },
     { name: "Notes", href: "/notes", icon: BookOpen },
     { name: "Chat", href: "/chat", icon: MessageCircle },
+    { name: "OCR", href: "/ocr", icon: Scan },
     { name: "Premium", href: "/premium", icon: Crown },
   ];
 
@@ -113,7 +115,19 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <ThemeToggle />
+            {/* Theme Toggle - Commented out
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <Sun className="w-5 h-5" />
+              ) : (
+                <Moon className="w-5 h-5" />
+              )}
+            </button>
+            */}
             {user ? (
               <div className="relative" ref={dropdownRef}>
                 <Button

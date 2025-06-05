@@ -251,43 +251,73 @@ const Chat = () => {
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {isLoading ? (
             <div className="flex justify-center items-center h-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#bbd9e8]"></div>
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="text-center text-gray-500">
-              No messages in this room yet
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2c4a5c]"></div>
             </div>
           ) : (
-            messages.map((message) => {
-              const isMe = message.sender === user._id;
+            messages.map((message, index) => {
+              const isCurrentUser = message.sender === user._id;
+              const isAdmin = message.isAdmin;
               return (
                 <div
-                  key={message._id}
-                  className={`flex ${
-                    isMe ? "justify-end" : "justify-start"
-                  }`}
+                  key={message._id || index}
+                  className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[85%] sm:max-w-[70%] rounded-lg p-3 ${
-                      message.isAdmin
-                        ? "bg-[#bbd9e8] text-[#2c4a5c] shadow-sm"
-                        : isMe
-                        ? "bg-[#e8f4fa] text-[#2c4a5c] shadow-sm border border-[#d4e6f0]"
-                        : "bg-white shadow-sm"
+                    className={`flex items-start gap-2 max-w-[70%] ${
+                      isCurrentUser ? 'flex-row-reverse' : 'flex-row'
                     }`}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-sm">{message.senderName}</span>
-                      {message.isAdmin && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#bbd9e8] text-[#2c4a5c]">
-                          Admin
-                        </span>
-                      )}
+                    {/* Avatar */}
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0 ${
+                        isAdmin ? 'ring-2 ring-purple-500 ring-offset-2' : ''
+                      }`}
+                      style={{ 
+                        backgroundColor: isAdmin 
+                          ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'
+                          : stringToColor(message.senderName || 'User')
+                      }}
+                    >
+                      {isAdmin ? '👑' : getInitials(message.senderName || 'User')}
                     </div>
-                    <p className="break-words text-sm">{message.content}</p>
-                    <span className="text-xs text-[#4a6b7d] mt-1 block">
-                      {new Date(message.timestamp).toLocaleDateString()}
-                    </span>
+
+                    {/* Message Content */}
+                    <div
+                      className={`rounded-lg px-4 py-2 ${
+                        isAdmin
+                          ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tl-none shadow-lg'
+                          : isCurrentUser
+                          ? 'bg-[#2c4a5c] text-white rounded-tr-none'
+                          : 'bg-white text-[#2c4a5c] rounded-tl-none'
+                      }`}
+                    >
+                      {!isCurrentUser && (
+                        <div className={`font-medium text-sm mb-1 flex items-center gap-2 ${
+                          isAdmin ? 'text-purple-200' : ''
+                        }`}>
+                          {message.senderName}
+                          {isAdmin && (
+                            <span className="px-2 py-0.5 text-xs bg-purple-500/30 rounded-full">
+                              Admin
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <div className={`text-sm ${isCurrentUser ? 'text-right' : 'text-left'}`}>
+                        {message.content}
+                      </div>
+                      <div
+                        className={`text-xs mt-1 ${
+                          isCurrentUser 
+                            ? 'text-gray-300 text-right' 
+                            : isAdmin 
+                            ? 'text-purple-200 text-left'
+                            : 'text-gray-500 text-left'
+                        }`}
+                      >
+                        {formatTime(message.timestamp)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
@@ -297,27 +327,24 @@ const Chat = () => {
         </div>
 
         {/* Message Input */}
-        <form
-          onSubmit={handleSendMessage}
-          className="bg-white p-4 border-t shadow-sm flex items-center gap-2"
-        >
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder={isConnected ? "Type a message..." : "Connecting to chat server..."}
-            className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#bbd9e8] text-sm"
-            disabled={!isConnected}
-            maxLength={500}
-          />
-          <button
-            type="submit"
-            disabled={!isConnected || !newMessage.trim()}
-            className="px-4 py-2 bg-[#bbd9e8] text-[#2c4a5c] rounded-lg hover:bg-[#a8c8d8] focus:outline-none focus:ring-2 focus:ring-[#bbd9e8] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
-          >
-            Send
-          </button>
-        </form>
+        <div className="bg-white p-4 border-t border-[#d4e6f0]">
+          <form onSubmit={handleSendMessage} className="flex gap-2">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-1 px-4 py-2 rounded-lg border border-[#d4e6f0] focus:outline-none focus:border-[#2c4a5c]"
+            />
+            <button
+              type="submit"
+              disabled={!isConnected}
+              className="px-4 py-2 bg-[#2c4a5c] text-white rounded-lg hover:bg-[#1e3444] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
