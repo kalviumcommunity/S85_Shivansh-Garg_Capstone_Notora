@@ -3,12 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FiLock } from "react-icons/fi";
 import SocialLoginButtons from "./SocialLoginButtons";
+import { useAuth } from "../context/AuthContext";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -18,7 +20,16 @@ const LoginPage = () => {
         email,
         password,
       });
+      
+      // Store token
       localStorage.setItem("token", response.data.token);
+      
+      // Store user data
+      if (response.data.user) {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        setUser(response.data.user);
+      }
+      
       alert("Login successful!");
       navigate("/");
     } catch (error) {

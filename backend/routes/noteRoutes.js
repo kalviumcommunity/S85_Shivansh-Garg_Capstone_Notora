@@ -11,6 +11,7 @@ router.get("/notes/:id", getNoteById);
 
 router.get("/notes", getAllNotes);
 
+
 router.post("/notes/upload", upload.single("file"), uploadNote);
 
 router.put("/notes/update/:id", upload.single("file"), updateNote);

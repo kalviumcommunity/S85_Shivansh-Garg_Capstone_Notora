@@ -15,10 +15,7 @@
 
 /* Example */
 body {
-  @apply bg-white text-black;
-}
-.dark body {
-  @apply bg-[#020817] text-white;
+  @apply text-black;
 }
 
 .gradient-text {
@@ -68,11 +65,6 @@ body {
   background: white; /* light mode */
   backdrop-filter: blur(10px);
 }
-
-.dark .glass-effect {
-  background: hsl(224, 83%, 5%); /* dark mode */
-}
-
 
 .glass-effect,
 .hover-lift,
