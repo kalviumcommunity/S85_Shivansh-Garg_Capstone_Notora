@@ -1,19 +1,47 @@
 const express = require('express');
-const Message = require('../models/chatModel');
 const router = express.Router();
+const Message = require('../models/chatModel');
+const { authMiddleware } = require('../middlewares/authMiddleware');
+const { adminMiddleware } = require('../middlewares/adminMiddleware');
 
-// GET /api/chat/:room/messages - get last 5 days of messages for a room
-router.get('/:room/messages', async (req, res) => {
-  const { room } = req.params;
-  const since = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+// Get messages for a specific room (any authenticated user)
+router.get('/messages/:room', authMiddleware, async (req, res) => {
   try {
-    const messages = await Message.find({
-      room,
-      createdAt: { $gte: since }
-    }).sort({ createdAt: 1 });
-    res.json({ messages });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch messages' });
+    const messages = await Message.find({ room: req.params.room })
+      .sort({ timestamp: 1 })
+      .populate('sender', 'name');
+
+    const formattedMessages = messages.map((message) => ({
+      _id: message._id,
+      sender: message.sender._id,
+      senderName: message.senderName,
+      content: message.content,
+      room: message.room,
+      isAdmin: message.isAdmin,
+      timestamp: message.timestamp,
+    }));
+
+    res.json(formattedMessages);
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ message: 'Error fetching messages' });
+  }
+});
+
+// Delete a message (admin only)
+router.delete('/messages/:messageId', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const message = await Message.findById(req.params.messageId);
+    
+    if (!message) {
+      return res.status(404).json({ message: 'Message not found' });
+    }
+
+    await message.deleteOne();
+    res.json({ message: 'Message deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting message:', error);
+    res.status(500).json({ message: 'Error deleting message' });
   }
 });
 

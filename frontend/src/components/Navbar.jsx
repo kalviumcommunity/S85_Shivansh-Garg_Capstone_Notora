@@ -14,24 +14,33 @@ import {
   Shield,
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useAuth } from "../context/AuthContext";
 
-const navigation = [
-  { name: "Home", href: "/", icon: Home },
-  { name: "Notes", href: "/notes", icon: BookOpen },
-  { name: "Chat", href: "/chat", icon: MessageCircle },
-  { name: "Premium", href: "/premium", icon: Crown },
-  { name: "Admin", href: "/admin", icon: Shield },
-];
+const getNavigation = (isAdmin) => {
+  const baseNav = [
+    { name: "Home", href: "/", icon: Home },
+    { name: "Notes", href: "/notes", icon: BookOpen },
+    { name: "Chat", href: "/chat", icon: MessageCircle },
+    { name: "Premium", href: "/premium", icon: Crown },
+  ];
+
+  if (isAdmin) {
+    baseNav.push({ name: "Admin", href: "/admin", icon: Shield });
+  }
+
+  return baseNav;
+};
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [user, setUser] = useState(null);
-  const [loadingUser, setLoadingUser] = useState(true);
   const dropdownRef = useRef();
   const location = useLocation();
   const pathname = location.pathname;
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const navigation = getNavigation(user?.role === 'admin');
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -43,48 +52,15 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
-
-    const fetchUser = async () => {
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-        setLoadingUser(false);
-      } else if (token) {
-        try {
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          const data = await res.json();
-          if (data.user) {
-            setUser(data.user);
-            localStorage.setItem("user", JSON.stringify(data.user));
-          }
-        } catch (err) {
-          console.error(err);
-        } finally {
-          setLoadingUser(false);
-        }
-      } else {
-        setLoadingUser(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  const handleLogout = async () => {
+  const handleLogout = () => {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
-        method: "GET",
-        credentials: "include",
-      });
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      setUser(null);
+      // Use the logout function from auth context
+      logout();
+      
+      // Close dropdown
+      setDropdownOpen(false);
+      
+      // Navigate to login
       navigate("/login");
     } catch (err) {
       console.error("Logout failed", err);
@@ -105,42 +81,40 @@ export default function Navbar() {
             <span className="text-xl font-bold gradient-text">Notora</span>
           </Link>
 
-          <div className="hidden md:flex items-center space-x-1">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              // Only show Admin link if user is admin
-              if (item.name === "Admin" && (!user || user.role !== 'admin')) {
-                return null;
-              }
-              return (
-                <Link key={item.name} to={item.href}>
-                  <Button
-                    variant={isActive ? "default" : "ghost"}
-                    className={cn(
-                      "flex items-center space-x-2 transition-all duration-300",
-                      isActive && "glow-effect"
-                    )}
-                    style={
-                      isActive
-                        ? {
-                            backgroundColor: "#9AC9DE",
-                            color: "#1F1F1F",
-                          }
-                        : {}
-                    }
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.name}</span>
-                  </Button>
-                </Link>
-              );
-            })}
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+          >
+            {isOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
+          </button>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-4">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={cn(
+                  "flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors",
+                  pathname === item.href
+                    ? "bg-[#bbd9e8] text-gray-800"
+                    : "text-gray-600 hover:bg-gray-100"
+                )}
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.name}</span>
+              </Link>
+            ))}
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
-            {loadingUser ? null : user ? (
+            {user ? (
               <div className="relative" ref={dropdownRef}>
                 <Button
                   variant="ghost"
@@ -153,11 +127,15 @@ export default function Navbar() {
                   <div className="absolute right-0 mt-2 w-48 bg-white border rounded-xl shadow-xl animate-fade-in">
                     <div className="px-4 py-2 border-b font-semibold text-gray-700">
                       {user.name}
+                      {user.role === 'admin' && (
+                        <span className="ml-2 text-xs text-blue-600">(Admin)</span>
+                      )}
                     </div>
                     {user.role === 'admin' && (
                       <Link
                         to="/admin"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        onClick={() => setDropdownOpen(false)}
                       >
                         <Shield className="w-4 h-4 mr-2" />
                         Admin Dashboard
@@ -174,56 +152,40 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <Button variant="outline" className="space-x-2">
-                <User className="w-4 h-4" />
-              </Button>
+              <Link to="/login">
+                <Button variant="outline" className="space-x-2">
+                  <User className="w-4 h-4" />
+                  <span>Login</span>
+                </Button>
+              </Link>
             )}
           </div>
+        </div>
+      </div>
 
-          <div className="md:hidden flex items-center space-x-2">
-            <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsOpen((prev) => !prev)}
-            >
-              {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </Button>
+      {/* Mobile Navigation */}
+      {isOpen && (
+        <div className="md:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={cn(
+                  "flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors",
+                  pathname === item.href
+                    ? "bg-[#bbd9e8] text-gray-800"
+                    : "text-gray-600 hover:bg-gray-100"
+                )}
+                onClick={() => setIsOpen(false)}
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.name}</span>
+              </Link>
+            ))}
           </div>
         </div>
-
-        {isOpen && (
-          <div className="md:hidden py-4 space-y-2 border-t border-border/50">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              // Only show Admin link if user is admin
-              if (item.name === "Admin" && (!user || user.role !== 'admin')) {
-                return null;
-              }
-              return (
-                <Link key={item.name} to={item.href} onClick={() => setIsOpen(false)}>
-                  <Button
-                    variant={isActive ? "default" : "ghost"}
-                    className={cn("w-full justify-start space-x-2", isActive && "glow-effect")}
-                    style={
-                      isActive
-                        ? {
-                            backgroundColor: "#9AC9DE",
-                            color: "#1F1F1F",
-                          }
-                        : {}
-                    }
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.name}</span>
-                  </Button>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      )}
     </nav>
   );
 }

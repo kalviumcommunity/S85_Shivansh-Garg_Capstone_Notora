@@ -11,7 +11,7 @@ const cron = require('node-cron');
 const mongoose = require("mongoose");
 const { handleMulterError } = require("./middlewares/upload");
 const jwt = require("jsonwebtoken");
-const User = require("./models/userModel");
+const User = require("./models/User");
 
 const noteRoutes = require("./routes/noteRoutes");
 const authRoutes = require("./routes/authRoutes");
@@ -24,8 +24,10 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    credentials: true
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST"],
+    credentials: true,
+    allowedHeaders: ["Authorization"]
   }
 });
 
@@ -41,8 +43,10 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
-  credentials: true
+  origin: "http://localhost:5173",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -116,65 +120,81 @@ io.use(async (socket, next) => {
   try {
     const token = socket.handshake.auth.token;
     if (!token) {
-      return next(new Error('Authentication error'));
+      return next(new Error("Authentication token not provided"));
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
+    const user = await User.findById(decoded.id);
     
     if (!user) {
-      return next(new Error('User not found'));
+      return next(new Error("User not found"));
     }
 
     socket.user = user;
     next();
-  } catch (err) {
-    next(new Error('Authentication error'));
+  } catch (error) {
+    console.error("Socket authentication error:", error);
+    next(new Error("Authentication failed"));
   }
 });
 
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.user.name);
+  console.log("User connected:", socket.user.name);
 
-  socket.on("join_room", (room) => {
-    socket.join(room);
-    console.log(`${socket.user.name} joined room: ${room}`);
+  socket.on("join_room", async (room) => {
+    try {
+      console.log(`${socket.user.name} joined room: ${room}`);
+      socket.join(room);
+
+      // Fetch recent messages for the room
+      const messages = await Message.find({ room })
+        .sort({ timestamp: -1 })
+        .limit(50)
+        .populate("sender", "name");
+
+      socket.emit("room_messages", messages);
+    } catch (error) {
+      console.error("Error joining room:", error);
+      socket.emit("error", "Failed to join room");
+    }
+  });
+
+  socket.on("send_message", async (messageData) => {
+    try {
+      console.log("Received message:", messageData);
+      
+      // Create new message
+      const message = new Message({
+        content: messageData.content,
+        room: messageData.room,
+        sender: socket.user._id,
+        senderName: socket.user.name,
+        isAdmin: socket.user.role === "admin", // Set isAdmin based on user role
+        timestamp: new Date()
+      });
+
+      await message.save();
+      console.log("Message saved:", message);
+
+      // Broadcast message to room
+      io.to(messageData.room).emit("receive_message", {
+        _id: message._id,
+        content: message.content,
+        room: message.room,
+        sender: message.sender,
+        senderName: message.senderName,
+        isAdmin: message.isAdmin,
+        timestamp: message.timestamp
+      });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      socket.emit("error", "Failed to send message");
+    }
   });
 
   socket.on("leave_room", (room) => {
-    socket.leave(room);
     console.log(`${socket.user.name} left room: ${room}`);
-  });
-
-  socket.on("send_message", async (data) => {
-    try {
-      console.log('Received message data:', data); // Debug log
-      const isAdmin = socket.user.role === 'admin';
-      console.log('User is admin:', isAdmin); // Debug log
-
-      const message = new Message({
-        sender: socket.user._id,
-        content: data.content,
-        room: data.room,
-        senderName: socket.user.name,
-        isAdmin: isAdmin
-      });
-      await message.save();
-      
-      const messageToEmit = {
-        sender: socket.user._id,
-        senderName: socket.user.name,
-        content: data.content,
-        room: data.room,
-        isAdmin: isAdmin,
-        timestamp: message.createdAt
-      };
-      
-      console.log('Emitting message:', messageToEmit); // Debug log
-      io.to(data.room).emit("receive_message", messageToEmit);
-    } catch (error) {
-      console.error("Error saving message:", error);
-    }
+    socket.leave(room);
   });
 
   socket.on("disconnect", () => {
