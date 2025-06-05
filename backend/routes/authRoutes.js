@@ -7,6 +7,7 @@ require("../passport/google");
 const User = require("../models/User");
 const tokenStore = require("../utils/tokenStore");
 const jwt = require('jsonwebtoken');
+const bcrypt = require("bcryptjs");
 
 // Google OAuth routes
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -49,8 +50,119 @@ router.post("/logout", async (req, res) => {
 });
 
 router.get("/me", authMiddleware, getCurrentUser);
-router.post("/signup", register);
-router.post("/login", login);
+
+// Login route
+router.post("/login", async (req, res) => {
+  try {
+    console.log("Login attempt:", { email: req.body.email });
+    
+    const { email, password } = req.body;
+
+    // Validate input
+    if (!email || !password) {
+      console.log("Missing credentials");
+      return res.status(400).json({ message: "Please provide email and password" });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log("User not found:", email);
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      console.log("Invalid password for user:", email);
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Generate token
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Send response
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
+
+    console.log("Login successful for user:", user.name);
+    res.json({
+      token,
+      user: userResponse
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Server error during login" });
+  }
+});
+
+// Register route
+router.post("/register", async (req, res) => {
+  try {
+    console.log("Registration attempt:", { email: req.body.email });
+    
+    const { name, email, password } = req.body;
+
+    // Validate input
+    if (!name || !email || !password) {
+      console.log("Missing registration fields");
+      return res.status(400).json({ message: "Please provide all required fields" });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      console.log("User already exists:", email);
+      return res.status(400).json({ message: "User already exists" });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const user = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role: "user" // Default role
+    });
+
+    await user.save();
+    console.log("User registered successfully:", name);
+
+    // Generate token
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Send response
+    const userResponse = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
+
+    res.status(201).json({
+      token,
+      user: userResponse
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Server error during registration" });
+  }
+});
 
 module.exports = router;
 

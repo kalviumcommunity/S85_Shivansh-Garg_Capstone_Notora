@@ -16,7 +16,7 @@ const SignupPage = () => {
     setLoading(true);
     try {
       console.log('Attempting signup with:', { name, email });
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
         name,
         email,
         password,

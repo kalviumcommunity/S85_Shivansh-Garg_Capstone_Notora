@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
-import { Send, Smile, MessageSquare, Users, HelpCircle, Star, Shield } from 'lucide-react';
+import { Send, Smile, MessageSquare, Users, HelpCircle, Star, Shield, Trash2 } from 'lucide-react';
+import { cn } from '../lib/utils';
+import axios from 'axios';
 
 // Simple emoji list for demo
 const EMOJIS = [
@@ -35,267 +37,287 @@ function stringToColor(str) {
   return color;
 }
 
+const rooms = [
+  { id: "general", name: "General", icon: "💬" },
+  { id: "doubt", name: "Doubt Clarification", icon: "❓" },
+  { id: "kalvium", name: "Kalvium Students", icon: "👨‍🎓" },
+  { id: "reviews", name: "Reviews", icon: "⭐" },
+];
+
 const Chat = () => {
+  const { user, token } = useAuth();
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [socket, setSocket] = useState(null);
-  const [showEmojis, setShowEmojis] = useState(false);
-  const [activeRoom, setActiveRoom] = useState('general');
-  const [roomMessages, setRoomMessages] = useState({});
+  const [newMessage, setNewMessage] = useState("");
+  const [selectedRoom, setSelectedRoom] = useState("general");
+  const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef(null);
-  const { user } = useAuth();
+  const socketRef = useRef(null);
 
-  const rooms = [
-    { id: 'general', name: 'General', icon: <MessageSquare className="w-5 h-5" /> },
-    { id: 'reviews', name: 'Reviews', icon: <Star className="w-5 h-5" /> },
-    { id: 'doubt', name: 'Doubt Clarification', icon: <HelpCircle className="w-5 h-5" /> },
-    { id: 'kalvium', name: 'Kalvium Students', icon: <Users className="w-5 h-5" /> },
-  ];
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-  // Fetch messages when room changes
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Socket connection effect
+  useEffect(() => {
+    if (!user) return;
+
+    const socket = io(import.meta.env.VITE_API_URL, {
+      auth: {
+        token: localStorage.getItem("token"),
+      },
+    });
+
+    socket.on("connect", () => {
+      console.log("Connected to socket server");
+      setIsConnected(true);
+      setError(null);
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
+      setError("Failed to connect to chat server");
+      setIsConnected(false);
+    });
+
+    socket.on("receive_message", (message) => {
+      console.log("Received message:", message);
+      setMessages((prev) => [...prev, message]);
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    });
+
+    socket.on("room_messages", (roomMessages) => {
+      console.log("Received room messages:", roomMessages);
+      setMessages(roomMessages);
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    });
+
+    socketRef.current = socket;
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!socketRef.current || !selectedRoom) return;
+
+    console.log("Joining room:", selectedRoom);
+    socketRef.current.emit("join_room", selectedRoom);
+
+    return () => {
+      console.log("Leaving room:", selectedRoom);
+      socketRef.current.emit("leave_room", selectedRoom);
+    };
+  }, [socketRef.current, selectedRoom]);
+
+  // Message fetching effect
   useEffect(() => {
     const fetchMessages = async () => {
+      if (!token) {
+        setError("Authentication token not found");
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/chat/${activeRoom}/messages`);
-        const data = await res.json();
-        if (data.messages) {
-          setRoomMessages(prev => ({
-            ...prev,
-            [activeRoom]: data.messages
-          }));
+        console.log("Fetching messages for room:", selectedRoom);
+        const response = await fetch(
+          `http://localhost:5000/api/chat/messages/${selectedRoom}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            credentials: 'include'
+          }
+        );
+
+        if (response.status === 401) {
+          setError("Please log in to view messages");
+          return;
         }
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch messages: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Fetched messages:", data);
+        setMessages(data);
       } catch (err) {
-        console.error('Error fetching messages:', err);
+        console.error("Error fetching messages:", err);
+        setError(`Failed to load messages: ${err.message}`);
+      } finally {
+        setIsLoading(false);
       }
     };
+
     fetchMessages();
-  }, [activeRoom]);
+  }, [token, selectedRoom]);
 
-  useEffect(() => {
-    const newSocket = io(import.meta.env.VITE_API_URL, {
-      withCredentials: true,
-      auth: {
-        token: localStorage.getItem('token')
-      }
-    });
-    setSocket(newSocket);
-
-    return () => newSocket.close();
-  }, []);
-
-  useEffect(() => {
-    if (socket) {
-      socket.emit('join_room', activeRoom);
-
-      socket.on('receive_message', (message) => {
-        console.log('Received message:', message); // Debug log
-        if (message.room === activeRoom) {
-          setRoomMessages(prev => ({
-            ...prev,
-            [message.room]: [...(prev[message.room] || []), message]
-          }));
-        }
-      });
-
-      return () => {
-        socket.emit('leave_room', activeRoom);
-        socket.off('receive_message');
-      };
-    }
-  }, [socket, activeRoom]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [roomMessages[activeRoom]]);
-
-  const sendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (newMessage.trim() && socket) {
-      console.log('Sending message as admin:', user.role === 'admin'); // Debug log
-      const messageData = {
-        sender: user.id,
-        senderName: user.name,
-        content: newMessage,
-        room: activeRoom,
-        isAdmin: user.role === 'admin'
-      };
-      console.log('Message data:', messageData); // Debug log
-      socket.emit('send_message', messageData);
-      setNewMessage('');
-      setShowEmojis(false);
+    if (!newMessage.trim() || !socketRef.current || !isConnected) return;
+
+    try {
+      console.log("Sending message to room:", selectedRoom);
+      socketRef.current.emit("send_message", {
+        content: newMessage.trim(),
+        room: selectedRoom,
+      });
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setError("Failed to send message");
     }
   };
 
-  const handleEmojiClick = (emoji) => {
-    setNewMessage((msg) => msg + emoji);
-    setShowEmojis(false);
+  const handleRoomChange = (roomId) => {
+    setSelectedRoom(roomId);
+    setMessages([]);
+    setIsLoading(true);
   };
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-600">Please log in to access the chat</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-full w-full bg-gray-100">
-      {/* Sidebar - Fixed with scrollable rooms */}
-      <div className="w-64 bg-white shadow-lg flex flex-col h-full">
-        <div className="p-4 border-b flex-shrink-0">
-          <h2 className="text-xl font-semibold text-gray-800">Chat Rooms</h2>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-2">
-            {rooms.map((room) => (
-              <button
-                key={room.id}
-                onClick={() => setActiveRoom(room.id)}
-                className={`w-full flex items-center space-x-3 p-3 rounded-lg mb-2 transition-colors ${
-                  activeRoom === room.id
-                    ? 'bg-[#bbd9e8] text-gray-800'
-                    : 'hover:bg-gray-100 text-gray-700'
-                }`}
-              >
-                {room.icon}
-                <span>{room.name}</span>
-              </button>
-            ))}
-          </div>
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden border-t border-[#d4e6f0] mt-16">
+      {/* Sidebar - Hidden on mobile, visible on md screens */}
+      <div className="hidden md:block w-64 bg-[#e8f4fa] text-[#2c4a5c] p-4 overflow-y-auto">
+        <h2 className="text-xl font-bold mb-4">Chat Rooms</h2>
+        <div className="space-y-2">
+          {rooms.map((room) => (
+            <button
+              key={room.id}
+              onClick={() => handleRoomChange(room.id)}
+              className={`w-full text-left px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                selectedRoom === room.id
+                  ? "bg-[#bbd9e8] text-[#2c4a5c] shadow-sm"
+                  : "hover:bg-[#d4e6f0]"
+              }`}
+            >
+              <span className="text-xl">{room.icon}</span>
+              <span className="font-medium">{room.name}</span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Chat Area - Fixed height with scrollable messages */}
-      <div className="flex-1 flex flex-col h-full">
-        <div
-          className="flex-1 flex flex-col h-full"
-          style={{
-            background: 'linear-gradient(135deg, #fafdff 0%, #f7fbfd 100%)',
-            border: '1px solid #e2e8f0',
-          }}
-        >
-          {/* Header - Fixed */}
-          <div className="px-6 py-4 border-b border-[#e2e8f0] flex items-center justify-between bg-[#f5f9fc] flex-shrink-0">
-            <div className="flex items-center space-x-2">
-              <span className="font-bold text-lg text-[#3a5d74] tracking-wide">
-                {rooms.find(room => room.id === activeRoom)?.name || 'Select a Room'}
-              </span>
-            </div>
-          </div>
-
-          {/* Messages Scroll Area - Scrollable */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="px-4 py-6 space-y-6">
-              {(!roomMessages[activeRoom] || roomMessages[activeRoom].length === 0) ? (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-gray-500 text-center">
-                    No messages yet. Start the conversation!
-                  </p>
-                </div>
-              ) : (
-                roomMessages[activeRoom].map((message, index) => {
-                  const isMe = message.sender === user.id;
-                  const initials = getInitials(message.senderName || (isMe ? user.name : 'User'));
-                  const avatarColor = stringToColor(message.senderName || (isMe ? user.name : 'User'));
-                  const time = formatTime(message.timestamp || message.createdAt);
-                  const isAdmin = message.isAdmin || (isMe && user.role === 'admin');
-                  
-                  return (
-                    <div key={index} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      {!isMe && (
-                        <div className="flex flex-col items-end mr-3 flex-shrink-0">
-                          <div
-                            className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-base shadow"
-                            style={{ background: avatarColor }}
-                          >
-                            {initials}
-                          </div>
-                        </div>
-                      )}
-                      <div className={`flex flex-col max-w-[70%] min-w-0 ${isMe ? 'items-end' : 'items-start'}`}>
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className={`font-semibold text-xs ${isMe ? 'text-black' : 'text-[#3a5d74]'}`}>
-                            {message.senderName || (isMe ? 'You' : 'User')}
-                            {isAdmin && (
-                              <span className="ml-2 inline-flex items-center text-[#3a5d74]">
-                                <Shield className="w-3 h-3 mr-1" />
-                                Admin
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-xs text-[#bbd9e8] flex-shrink-0">{time}</span>
-                        </div>
-                        <div
-                          className={`rounded-2xl px-4 py-3 shadow-md flex flex-col transition-all duration-200
-                            ${isAdmin 
-                              ? 'bg-[#3a5d74] text-white'
-                              : isMe
-                                ? 'bg-[#bbd9e8] text-gray-800'
-                                : 'bg-[#f5f9fc] text-black'
-                            }
-                          `}
-                        >
-                          <p className="break-words whitespace-pre-wrap text-base">{message.content}</p>
-                        </div>
-                      </div>
-                      {isMe && (
-                        <div className="flex flex-col items-end ml-3 flex-shrink-0">
-                          <div
-                            className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-base shadow"
-                            style={{ background: avatarColor }}
-                          >
-                            {initials}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-
-          {/* Input Area - Fixed */}
-          <div className="border-t border-[#e2e8f0] bg-[#fafdff] px-4 py-3 flex-shrink-0">
-            <form onSubmit={sendMessage} className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#bbd9e8] bg-white text-black border-[#e2e8f0] text-base transition-all duration-200 min-w-0"
-              />
-              <div className="relative flex-shrink-0">
-                <button
-                  type="button"
-                  className="p-2 rounded-lg hover:bg-[#eaf6fb] transition-colors"
-                  tabIndex={-1}
-                  onClick={() => setShowEmojis((v) => !v)}
-                  aria-label="Pick emoji"
-                >
-                  <Smile className="w-5 h-5 text-[#bbd9e8]" />
-                </button>
-                {showEmojis && (
-                  <div className="absolute bottom-12 right-0 z-10 bg-white border border-[#e2e8f0] rounded-xl shadow-lg p-6 animate-fade-in-down min-w-[300px]">
-                    <div className="grid grid-cols-5 gap-8">
-                      {EMOJIS.flat().map((emoji) => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          className="text-2xl hover:bg-[#f5f9fc] rounded-lg transition-colors flex items-center justify-center w-8 h-8"
-                          onClick={() => handleEmojiClick(emoji)}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col bg-gray-100 overflow-hidden">
+        {/* Room Header */}
+        <div className="bg-[#e8f4fa] p-4 border-b border-[#d4e6f0] shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">💬</span>
+                <h2 className="text-xl font-semibold text-[#2c4a5c]">
+                  {rooms.find((r) => r.id === selectedRoom)?.name || "Chat"}
+                </h2>
               </div>
-              <button
-                type="submit"
-                className="p-2 rounded-lg bg-[#bbd9e8] text-gray-800 hover:bg-[#a8c8d7] transition-colors flex-shrink-0"
-                aria-label="Send message"
-              >
-                <Send className="w-5 h-5" />
-              </button>
-            </form>
+              {error && (
+                <p className="text-red-500 text-sm mt-1">{error}</p>
+              )}
+              {!isConnected && !error && (
+                <p className="text-yellow-500 text-sm mt-1">Connecting to chat server...</p>
+              )}
+            </div>
+            {/* Mobile menu button - visible only on small screens */}
+            <button 
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+              onClick={() => {/* Add mobile menu toggle logic */}}
+            >
+              <svg className="w-6 h-6 text-[#2c4a5c]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
           </div>
         </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-full">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#bbd9e8]"></div>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="text-center text-gray-500">
+              No messages in this room yet
+            </div>
+          ) : (
+            messages.map((message) => {
+              const isMe = message.sender === user._id;
+              return (
+                <div
+                  key={message._id}
+                  className={`flex ${
+                    isMe ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  <div
+                    className={`max-w-[85%] sm:max-w-[70%] rounded-lg p-3 ${
+                      message.isAdmin
+                        ? "bg-[#bbd9e8] text-[#2c4a5c] shadow-sm"
+                        : isMe
+                        ? "bg-[#e8f4fa] text-[#2c4a5c] shadow-sm border border-[#d4e6f0]"
+                        : "bg-white shadow-sm"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-sm">{message.senderName}</span>
+                      {message.isAdmin && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-[#bbd9e8] text-[#2c4a5c]">
+                          Admin
+                        </span>
+                      )}
+                    </div>
+                    <p className="break-words text-sm">{message.content}</p>
+                    <span className="text-xs text-[#4a6b7d] mt-1 block">
+                      {new Date(message.timestamp).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Message Input */}
+        <form
+          onSubmit={handleSendMessage}
+          className="bg-white p-4 border-t shadow-sm flex items-center gap-2"
+        >
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder={isConnected ? "Type a message..." : "Connecting to chat server..."}
+            className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#bbd9e8] text-sm"
+            disabled={!isConnected}
+            maxLength={500}
+          />
+          <button
+            type="submit"
+            disabled={!isConnected || !newMessage.trim()}
+            className="px-4 py-2 bg-[#bbd9e8] text-[#2c4a5c] rounded-lg hover:bg-[#a8c8d8] focus:outline-none focus:ring-2 focus:ring-[#bbd9e8] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+          >
+            Send
+          </button>
+        </form>
       </div>
     </div>
   );

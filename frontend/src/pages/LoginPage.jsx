@@ -10,7 +10,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser, refreshUser } = useAuth();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -21,16 +21,22 @@ const LoginPage = () => {
         password,
       });
       
-      // Store token
-      localStorage.setItem("token", response.data.token);
-      
-      // Refresh user data to ensure we have the latest role information
-      await refreshUser();
-      
-      alert("Login successful!");
-      navigate("/");
+      if (response.data.token) {
+        // Store token and user data
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        
+        // Use the login function from auth context
+        await login(email, password);
+        
+        alert("Login successful!");
+        navigate("/");
+      } else {
+        throw new Error("Invalid response from server");
+      }
     } catch (error) {
-      alert(error.response?.data?.message || "Invalid credentials or server error");
+      console.error("Login error:", error.response?.data || error);
+      alert(error.response?.data?.error || error.response?.data?.message || "Invalid credentials or server error");
     } finally {
       setLoading(false);
     }
