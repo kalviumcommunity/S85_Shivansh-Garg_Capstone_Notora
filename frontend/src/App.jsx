@@ -13,6 +13,7 @@ import AdminRoute from "./components/AdminRoute";
 import AdminDashboard from './pages/AdminDashboard';
 import UploadPage from "./pages/UploadPage";
 import PremiumPage from "./pages/PremiumPage";
+import OCRPage from "./pages/OCRPage";
 // import PremiumPage from "./pages/PremiumPage";
 // import UploadPage from "./pages/UploadPage";
 
@@ -38,6 +39,7 @@ function AppContent() {
         } />
         <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
         <Route path="/premium" element={<ProtectedRoute><PremiumPage /></ProtectedRoute>} />
+        <Route path="/ocr" element={<ProtectedRoute><OCRPage /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
         {/* <Route path="/premium" element={<PremiumPage />} /> */}
         {/* <Route path="/upload" element={<UploadPage />} /> */}

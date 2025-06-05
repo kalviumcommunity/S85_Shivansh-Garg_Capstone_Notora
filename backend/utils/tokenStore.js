@@ -2,7 +2,7 @@
 class TokenStore {
   constructor() {
     this.store = new Map();
-    console.log("✅ Using in-memory token store");
+    console.log("Using in-memory token store");
   }
 
   async setEx(key, ttl, value) {

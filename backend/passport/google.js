@@ -11,19 +11,37 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        // Find existing user by email
         let user = await User.findOne({ email: profile.emails[0].value });
 
         if (!user) {
+          // Create new user if doesn't exist
           user = new User({
             name: profile.displayName,
             email: profile.emails[0].value,
-            password: "GoogleOAuth" // Dummy password
+            password: "GoogleOAuth", // Dummy password
+            role: "user" // Default role for new users
           });
           await user.save();
+          console.log('Created new user via Google auth:', {
+            email: user.email,
+            role: user.role
+          });
+        } else {
+          // Update existing user's name if changed
+          if (user.name !== profile.displayName) {
+            user.name = profile.displayName;
+            await user.save();
+          }
+          console.log('Found existing user via Google auth:', {
+            email: user.email,
+            role: user.role
+          });
         }
 
         return done(null, user);
       } catch (err) {
+        console.error('Google auth error:', err);
         return done(err, null);
       }
     }
@@ -35,6 +53,11 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser(async (id, done) => {
+  try {
   const user = await User.findById(id);
   done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
 });
+

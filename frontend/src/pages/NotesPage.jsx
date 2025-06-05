@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
     Card,
@@ -32,21 +32,27 @@ import { Link } from "react-router-dom";
 const subjects = ["All", "Java", "C++", "Web Development", "Python", "Data Structures", "Algorithms"];
 
 export default function NotesPage() {
+    const { api } = useAuth();
     const [notes, setNotes] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedSubject, setSelectedSubject] = useState("All");
     const [sortBy, setSortBy] = useState("date");
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        axios
-            .get(`${import.meta.env.VITE_API_URL}/api/notes`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-            })
-            .then((res) => setNotes(res.data))
-            .catch((err) => console.error("Error fetching notes:", err));
-    }, []);
+        const fetchNotes = async () => {
+            try {
+                const response = await api.get('/api/notes');
+                setNotes(response.data);
+                setError(null);
+            } catch (err) {
+                console.error("Error fetching notes:", err);
+                setError("Failed to fetch notes. Please try again later.");
+            }
+        };
+
+        fetchNotes();
+    }, [api]);
 
     const filteredNotes = notes
         .filter(
