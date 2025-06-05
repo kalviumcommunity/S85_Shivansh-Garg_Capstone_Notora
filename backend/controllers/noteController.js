@@ -1,5 +1,17 @@
 const Note = require("../models/Note");
 const cloudinary = require("cloudinary").v2;
+const User = require("../models/User");
+const streamifier = require('streamifier');
+
+// Define allowed subjects (same as in Note model)
+const ALLOWED_SUBJECTS = [
+  "Java",
+  "C++",
+  "Web Development",
+  "Python",
+  "Data Structures",
+  "Algorithms"
+];
 
 const getNoteById = async (req, res) => {
   try {
@@ -18,11 +30,10 @@ const getNoteById = async (req, res) => {
   }
 };
 
-
 const getAllNotes = async (req, res) => {
   try {
     const { subject } = req.query;
-    let filter = {};
+    let filter = { status: 'approved' }; // Only show approved notes
 
     if (subject) {
       filter.subject = subject.toLowerCase();
@@ -38,7 +49,14 @@ const getAllNotes = async (req, res) => {
 
 const uploadNote = async (req, res) => {
   try {
-    const { title, description, subject, uploadedBy } = req.body;
+    console.log("Upload request received:", {
+      body: req.body,
+      file: req.file,
+      user: req.user
+    });
+
+    const { title, description, subject, isPremium } = req.body;
+    const uploadedBy = req.user._id;
 
     // Basic validations
     if (!title || typeof title !== 'string' || title.trim().length < 3) {
@@ -53,30 +71,80 @@ const uploadNote = async (req, res) => {
       return res.status(400).json({ error: "Subject is required and must be a string." });
     }
 
-    if (!uploadedBy || typeof uploadedBy !== 'string') {
-      return res.status(400).json({ error: "uploadedBy (user ID) is required and must be a string." });
+    // Validate subject against allowed subjects (case-insensitive)
+    const normalizedSubject = subject.trim();
+    const isValidSubject = ALLOWED_SUBJECTS.some(
+      allowedSubject => allowedSubject.toLowerCase() === normalizedSubject.toLowerCase()
+    );
+
+    if (!isValidSubject) {
+      return res.status(400).json({ 
+        error: `Invalid subject. Allowed subjects are: ${ALLOWED_SUBJECTS.join(', ')}` 
+      });
     }
 
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded." });
     }
 
-    const newNote = new Note({
-      title: title.trim(),
-      description: description.trim(),
-      subject: subject.trim().toLowerCase(),
-      uploadedBy,
-      fileUrl: req.file.path,
-      cloudinaryId: req.file.filename,
+    // Upload to Cloudinary using stream
+    const uploadPromise = new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "notora",
+          resource_type: "raw",
+          public_id: `${Date.now()}-${req.file.originalname.split('.')[0].replace(/[^a-zA-Z0-9]/g, '')}`,
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+
+      streamifier.createReadStream(req.file.buffer).pipe(uploadStream);
     });
 
-    await newNote.save();
+    const cloudinaryResult = await uploadPromise;
+    console.log("File uploaded to Cloudinary:", cloudinaryResult);
 
-    res.status(201).json({ message: "Note uploaded successfully", note: newNote });
+    // Create new note
+    const newNote = new Note({
+      title: title.trim(),
+      content: description.trim(),
+      subject: normalizedSubject,
+      uploadedBy,
+      fileUrl: cloudinaryResult.secure_url,
+      cloudinaryId: cloudinaryResult.public_id,
+      isPremium: isPremium === 'true',
+      status: 'pending'
+    });
+
+    // Save note to database
+    const savedNote = await newNote.save();
+    console.log("Note saved successfully:", savedNote);
+
+    // Update user's notes array
+    await User.findByIdAndUpdate(uploadedBy, {
+      $push: { notes: savedNote._id }
+    });
+    console.log("User's notes array updated");
+
+    res.status(201).json({ 
+      message: "Note uploaded successfully", 
+      note: savedNote 
+    });
 
   } catch (err) {
-    console.error("UPLOAD ERROR >>>", err);
-    res.status(500).json({ error: err.message || "Failed to upload note" });
+    console.error("UPLOAD ERROR >>>", {
+      message: err.message,
+      stack: err.stack,
+      name: err.name
+    });
+
+    res.status(500).json({ 
+      error: err.message || "Failed to upload note. Please try again.",
+      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 };
 
@@ -137,15 +205,129 @@ const deleteNote = async (req, res) => {
       await cloudinary.uploader.destroy(note.cloudinaryId);
     }
 
-    // Delete note from DB
-    await note.deleteOne();
+    // Delete note from database
+    await Note.findByIdAndDelete(id);
 
-    res.status(200).json({ message: "Note deleted successfully", note });
+    // Remove note from user's notes array
+    await User.findByIdAndUpdate(note.uploadedBy, {
+      $pull: { notes: id }
+    });
+
+    res.status(200).json({ message: "Note deleted successfully" });
   } catch (err) {
     console.error("DELETE ERROR >>>", err);
     res.status(500).json({ error: err.message || "Failed to delete note" });
   }
 };
 
+const getPendingNotes = async (req, res) => {
+  try {
+    const notes = await Note.find({ status: 'pending' })
+      .populate('uploadedBy', 'name email')
+      .sort({ createdAt: -1 });
+    res.status(200).json(notes);
+  } catch (err) {
+    console.error("GET PENDING NOTES ERROR >>>", err);
+    res.status(500).json({ error: "Failed to fetch pending notes" });
+  }
+};
 
-module.exports = { getNoteById, getAllNotes, uploadNote, updateNote, deleteNote };
+const reviewNote = async (req, res) => {
+  try {
+    const { noteId } = req.params;
+    const { status, feedback } = req.body;
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ error: "Invalid status. Must be 'approved' or 'rejected'" });
+    }
+
+    const note = await Note.findById(noteId);
+    if (!note) {
+      return res.status(404).json({ error: "Note not found" });
+    }
+
+    if (status === 'rejected') {
+      try {
+        // Delete file from Cloudinary with detailed logging
+        if (note.cloudinaryId) {
+          console.log('Attempting to delete from Cloudinary:', note.cloudinaryId);
+          const cloudinaryResult = await cloudinary.uploader.destroy(note.cloudinaryId, {
+            resource_type: "raw",
+            invalidate: true
+          });
+          console.log('Cloudinary deletion result:', cloudinaryResult);
+          
+          if (cloudinaryResult.result !== 'ok') {
+            throw new Error(`Cloudinary deletion failed: ${cloudinaryResult.result}`);
+          }
+        } else {
+          console.warn('No cloudinaryId found for note:', noteId);
+        }
+
+        // Remove note from user's notes array
+        await User.findByIdAndUpdate(note.uploadedBy, {
+          $pull: { notes: noteId }
+        });
+
+        // Delete note from database
+        await Note.findByIdAndDelete(noteId);
+
+        return res.status(200).json({ 
+          message: "Note rejected and deleted successfully",
+          feedback: feedback || "Note was rejected and removed from the system."
+        });
+      } catch (cloudinaryError) {
+        console.error('Error during note rejection:', cloudinaryError);
+        // Even if Cloudinary deletion fails, we should still remove from MongoDB
+        await User.findByIdAndUpdate(note.uploadedBy, {
+          $pull: { notes: noteId }
+        });
+        await Note.findByIdAndDelete(noteId);
+        
+        return res.status(200).json({ 
+          message: "Note rejected and removed from database. Cloudinary cleanup may need manual intervention.",
+          feedback: feedback || "Note was rejected and removed from the system.",
+          cloudinaryError: cloudinaryError.message
+        });
+      }
+    }
+
+    // If approved, update the note
+    note.status = status;
+    if (feedback) {
+      note.feedback = feedback;
+    }
+    note.reviewedAt = new Date();
+    note.reviewedBy = req.user._id;
+
+    await note.save();
+
+    res.status(200).json({ message: `Note ${status} successfully`, note });
+  } catch (err) {
+    console.error("REVIEW NOTE ERROR >>>", err);
+    res.status(500).json({ error: "Failed to review note" });
+  }
+};
+
+const getAllNotesAdmin = async (req, res) => {
+  try {
+    const notes = await Note.find()
+      .populate('uploadedBy', 'name email')
+      .sort({ createdAt: -1 });
+    res.status(200).json(notes);
+  } catch (err) {
+    console.error("GET ALL NOTES ADMIN ERROR >>>", err);
+    res.status(500).json({ error: "Failed to fetch notes" });
+  }
+};
+
+module.exports = {
+  getNoteById,
+  getAllNotes,
+  uploadNote,
+  updateNote,
+  deleteNote,
+  getPendingNotes,
+  reviewNote,
+  getAllNotesAdmin
+};

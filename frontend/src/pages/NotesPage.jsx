@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const subjects = ["All", "C++", "Java", "Web Development", "Miscellaneous"];
+const subjects = ["All", "Java", "C++", "Web Development", "Python", "Data Structures", "Algorithms"];
 
 export default function NotesPage() {
     const [notes, setNotes] = useState([]);
@@ -39,7 +39,11 @@ export default function NotesPage() {
 
     useEffect(() => {
         axios
-            .get(`${import.meta.env.VITE_API_URL}/api/notes`)
+            .get(`${import.meta.env.VITE_API_URL}/api/notes`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+            })
             .then((res) => setNotes(res.data))
             .catch((err) => console.error("Error fetching notes:", err));
     }, []);
@@ -172,8 +176,19 @@ export default function NotesPage() {
                                 </CardTitle>
 
                                 <CardDescription className="text-sm text-[#64748b]">
-                                    {note.description}
+                                    {note.content}
                                 </CardDescription>
+
+                                {note.status === 'pending' && (
+                                    <Badge className="mt-2 bg-yellow-100 text-yellow-800">
+                                        Pending Review
+                                    </Badge>
+                                )}
+                                {note.status === 'rejected' && (
+                                    <Badge className="mt-2 bg-red-100 text-red-800">
+                                        Rejected
+                                    </Badge>
+                                )}
                             </div>
                         </CardHeader>
 

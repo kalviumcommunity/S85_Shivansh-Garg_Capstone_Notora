@@ -24,7 +24,7 @@ exports.register = async (req, res) => {
 
     res.status(201).json({
       message: "Signup successful",
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
       token,
     });
   } catch (err) {
@@ -56,7 +56,13 @@ exports.login = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        email: user.email,
+        role: user.role,
+        isPremium: user.isPremium 
+      },
       token,
     });
   } catch (err) {
@@ -67,7 +73,7 @@ exports.login = async (req, res) => {
 
 exports.getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user).select("name email _id isPremium");
+    const user = await User.findById(req.user).select("name email _id isPremium role");
     if (!user) return res.status(404).json({ error: "User not found" });
 
     res.status(200).json({ user });

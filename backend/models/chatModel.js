@@ -17,6 +17,10 @@ const messageSchema = new mongoose.Schema({
   room: {
     type: String,
     required: true
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

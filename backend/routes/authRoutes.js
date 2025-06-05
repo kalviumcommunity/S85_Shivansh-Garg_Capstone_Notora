@@ -1,21 +1,29 @@
 const express = require("express");
-const authMiddleware = require("../middlewares/authMiddleware");
+const { authMiddleware } = require("../middlewares/authMiddleware");
 const { register, login, getCurrentUser } = require("../controllers/authController");
 const router = express.Router();
 const passport = require("passport");
 require("../passport/google");
 const User = require("../models/User");
-const redisClient = require("../utils/redisClient");
+const tokenStore = require("../utils/tokenStore");
 const jwt = require('jsonwebtoken');
 
+// Google OAuth routes
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
+router.get(
+  "/google/callback",
+  passport.authenticate("google", {
+    successRedirect: "http://localhost:5173/",
+    failureRedirect: "http://localhost:3000/login",
+  })
+);
 
+// Auth routes
 router.post("/logout", async (req, res) => {
   const authHeader = req.header("Authorization") || "";
   const [scheme, token] = authHeader.split(" ");
 
-  
   if (scheme !== "Bearer" || !token) {
     return res.status(400).json({ error: "Token not provided" });
   }
@@ -30,7 +38,7 @@ router.post("/logout", async (req, res) => {
     const ttl = exp - now;
 
     if (ttl > 0) {
-      await redisClient.setEx(`blacklist_${token}`, ttl, "true");
+      await tokenStore.setEx(`blacklist_${token}`, ttl, "true");
     }
 
     return res.status(200).json({ message: "Logout successful and token blacklisted" });
@@ -41,7 +49,6 @@ router.post("/logout", async (req, res) => {
 });
 
 router.get("/me", authMiddleware, getCurrentUser);
-
 router.post("/signup", register);
 router.post("/login", login);
 

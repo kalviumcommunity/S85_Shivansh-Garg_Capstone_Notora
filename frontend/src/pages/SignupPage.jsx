@@ -5,7 +5,7 @@ import { FiLock } from "react-icons/fi";
 import SocialLoginButtons from "./SocialLoginButtons";
 
 const SignupPage = () => {
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,15 +15,25 @@ const SignupPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
-        username,
+      console.log('Attempting signup with:', { name, email });
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
+        name,
         email,
         password,
       });
+      
+      console.log('Signup response:', response.data);
+      
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      
       alert("Signup successful!");
-      navigate("/login");
+      navigate("/");
     } catch (error) {
-      alert(error.response?.data?.message || "Signup failed!");
+      console.error('Signup error:', error.response?.data);
+      alert(error.response?.data?.error || "Signup failed!");
     } finally {
       setLoading(false);
     }
@@ -60,9 +70,9 @@ const SignupPage = () => {
           <form className="space-y-6" onSubmit={handleSignup}>
             <input
               type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
               className="w-full border-b-2 border-gray-300 focus:border-[#9AC9DE] outline-none py-2 placeholder-gray-500"
             />
