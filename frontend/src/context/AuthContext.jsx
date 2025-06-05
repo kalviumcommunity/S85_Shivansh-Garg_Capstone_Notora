@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
@@ -14,43 +15,48 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUser = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (res.data.user) {
+          setUser(res.data.user);
+          localStorage.setItem('user', JSON.stringify(res.data.user));
+        }
+      } catch (err) {
+        console.error('Error refreshing user:', err);
+        // Clear invalid session
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+      }
+    }
+  };
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
 
-    const fetchUser = async () => {
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-        setLoading(false);
-      } else if (token) {
-        try {
-          const res = await fetch('http://localhost:5000/api/auth/me', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          const data = await res.json();
-          if (data.user) {
-            setUser(data.user);
-            localStorage.setItem('user', JSON.stringify(data.user));
-          }
-        } catch (err) {
-          console.error(err);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      setLoading(false);
+    } else if (token) {
+      refreshUser().finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const value = {
     user,
     setUser,
-    loading
+    loading,
+    refreshUser
   };
 
   return (

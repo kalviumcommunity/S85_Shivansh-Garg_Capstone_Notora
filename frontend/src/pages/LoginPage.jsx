@@ -10,7 +10,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { setUser, refreshUser } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,11 +24,8 @@ const LoginPage = () => {
       // Store token
       localStorage.setItem("token", response.data.token);
       
-      // Store user data
-      if (response.data.user) {
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        setUser(response.data.user);
-      }
+      // Refresh user data to ensure we have the latest role information
+      await refreshUser();
       
       alert("Login successful!");
       navigate("/");

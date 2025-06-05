@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
-import { Send, Smile, MessageSquare, Users, HelpCircle, Star } from 'lucide-react';
+import { Send, Smile, MessageSquare, Users, HelpCircle, Star, Shield } from 'lucide-react';
 
 // Simple emoji list for demo
 const EMOJIS = [
@@ -56,7 +56,7 @@ const Chat = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/chat/${activeRoom}/messages`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/chat/${activeRoom}/messages`);
         const data = await res.json();
         if (data.messages) {
           setRoomMessages(prev => ({
@@ -65,15 +65,18 @@ const Chat = () => {
           }));
         }
       } catch (err) {
-        // Optionally handle error
+        console.error('Error fetching messages:', err);
       }
     };
     fetchMessages();
   }, [activeRoom]);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:5000', {
-      withCredentials: true
+    const newSocket = io(import.meta.env.VITE_API_URL, {
+      withCredentials: true,
+      auth: {
+        token: localStorage.getItem('token')
+      }
     });
     setSocket(newSocket);
 
@@ -85,6 +88,7 @@ const Chat = () => {
       socket.emit('join_room', activeRoom);
 
       socket.on('receive_message', (message) => {
+        console.log('Received message:', message); // Debug log
         if (message.room === activeRoom) {
           setRoomMessages(prev => ({
             ...prev,
@@ -107,12 +111,15 @@ const Chat = () => {
   const sendMessage = (e) => {
     e.preventDefault();
     if (newMessage.trim() && socket) {
+      console.log('Sending message as admin:', user.role === 'admin'); // Debug log
       const messageData = {
         sender: user.id,
         senderName: user.name,
         content: newMessage,
-        room: activeRoom
+        room: activeRoom,
+        isAdmin: user.role === 'admin'
       };
+      console.log('Message data:', messageData); // Debug log
       socket.emit('send_message', messageData);
       setNewMessage('');
       setShowEmojis(false);
@@ -184,6 +191,8 @@ const Chat = () => {
                   const initials = getInitials(message.senderName || (isMe ? user.name : 'User'));
                   const avatarColor = stringToColor(message.senderName || (isMe ? user.name : 'User'));
                   const time = formatTime(message.timestamp || message.createdAt);
+                  const isAdmin = message.isAdmin || (isMe && user.role === 'admin');
+                  
                   return (
                     <div key={index} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                       {!isMe && (
@@ -200,14 +209,23 @@ const Chat = () => {
                         <div className="flex items-center space-x-2 mb-1">
                           <span className={`font-semibold text-xs ${isMe ? 'text-black' : 'text-[#3a5d74]'}`}>
                             {message.senderName || (isMe ? 'You' : 'User')}
+                            {isAdmin && (
+                              <span className="ml-2 inline-flex items-center text-[#3a5d74]">
+                                <Shield className="w-3 h-3 mr-1" />
+                                Admin
+                              </span>
+                            )}
                           </span>
                           <span className="text-xs text-[#bbd9e8] flex-shrink-0">{time}</span>
                         </div>
                         <div
                           className={`rounded-2xl px-4 py-3 shadow-md flex flex-col transition-all duration-200
-                            ${isMe
-                              ? 'bg-[#bbd9e8] text-gray-800 self-end'
-                              : 'bg-[#f5f9fc] text-black self-start'}
+                            ${isAdmin 
+                              ? 'bg-[#3a5d74] text-white'
+                              : isMe
+                                ? 'bg-[#bbd9e8] text-gray-800'
+                                : 'bg-[#f5f9fc] text-black'
+                            }
                           `}
                         >
                           <p className="break-words whitespace-pre-wrap text-base">{message.content}</p>
@@ -233,7 +251,7 @@ const Chat = () => {
 
           {/* Input Area - Fixed */}
           <div className="border-t border-[#e2e8f0] bg-[#fafdff] px-4 py-3 flex-shrink-0">
-            <form onSubmit={sendMessage} className="flex items-center space-x-2 relative">
+            <form onSubmit={sendMessage} className="flex items-center space-x-2">
               <input
                 type="text"
                 value={newMessage}

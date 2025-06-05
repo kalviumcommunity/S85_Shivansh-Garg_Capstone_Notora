@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   LogOut,
+  Shield,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -19,6 +20,7 @@ const navigation = [
   { name: "Notes", href: "/notes", icon: BookOpen },
   { name: "Chat", href: "/chat", icon: MessageCircle },
   { name: "Premium", href: "/premium", icon: Crown },
+  { name: "Admin", href: "/admin", icon: Shield },
 ];
 
 export default function Navbar() {
@@ -45,39 +47,38 @@ export default function Navbar() {
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
 
-const fetchUser = async () => {
-  if (storedUser) {
-    setUser(JSON.parse(storedUser));
-    setLoadingUser(false);
-  } else if (token) {
-    try {
-      const res = await fetch("http://localhost:5000/api/auth/me", {
-        headers: {
-          Authorization: `Bearer ${token}`, // FIXED
-        },
-      });
-      const data = await res.json();
-      if (data.user) {
-        setUser(data.user);
-        localStorage.setItem("user", JSON.stringify(data.user));
+    const fetchUser = async () => {
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+        setLoadingUser(false);
+      } else if (token) {
+        try {
+          const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await res.json();
+          if (data.user) {
+            setUser(data.user);
+            localStorage.setItem("user", JSON.stringify(data.user));
+          }
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setLoadingUser(false);
+        }
+      } else {
+        setLoadingUser(false);
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingUser(false);
-    }
-  } else {
-    setLoadingUser(false);
-  }
-};
-
+    };
 
     fetchUser();
   }, []);
 
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:5000/auth/logout", {
+      await fetch(`${import.meta.env.VITE_API_URL}/auth/logout`, {
         method: "GET",
         credentials: "include",
       });
@@ -108,6 +109,10 @@ const fetchUser = async () => {
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
+              // Only show Admin link if user is admin
+              if (item.name === "Admin" && (!user || user.role !== 'admin')) {
+                return null;
+              }
               return (
                 <Link key={item.name} to={item.href}>
                   <Button
@@ -149,6 +154,15 @@ const fetchUser = async () => {
                     <div className="px-4 py-2 border-b font-semibold text-gray-700">
                       {user.name}
                     </div>
+                    {user.role === 'admin' && (
+                      <Link
+                        to="/admin"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        <Shield className="w-4 h-4 mr-2" />
+                        Admin Dashboard
+                      </Link>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -160,12 +174,9 @@ const fetchUser = async () => {
                 )}
               </div>
             ) : (
-              // <Link to="/login">
-                <Button variant="outline" className="space-x-2">
-                  <User className="w-4 h-4" />
-                  {/* <span>Login</span> */}
-                </Button>
-              // </Link>
+              <Button variant="outline" className="space-x-2">
+                <User className="w-4 h-4" />
+              </Button>
             )}
           </div>
 
@@ -186,6 +197,10 @@ const fetchUser = async () => {
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
+              // Only show Admin link if user is admin
+              if (item.name === "Admin" && (!user || user.role !== 'admin')) {
+                return null;
+              }
               return (
                 <Link key={item.name} to={item.href} onClick={() => setIsOpen(false)}>
                   <Button

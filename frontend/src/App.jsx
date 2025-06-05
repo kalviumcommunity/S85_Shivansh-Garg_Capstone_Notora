@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
@@ -9,6 +9,9 @@ import ChatPage from "./pages/ChatPage";
 import GoogleCallback from "./pages/GoogleCallback";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
+import AdminDashboard from './pages/AdminDashboard';
+import UploadPage from "./pages/UploadPage";
 // import PremiumPage from "./pages/PremiumPage";
 // import UploadPage from "./pages/UploadPage";
 
@@ -21,19 +24,19 @@ function AppContent() {
     <div className="min-h-screen bg-white">
       {!hideNavbar && <Navbar />}
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/notes" element={<NotesPage />} />
+        <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
-        <Route 
-          path="/chat" 
-          element={
-            <ProtectedRoute>
-              <ChatPage />
-            </ProtectedRoute>
-          } 
-        />
+        <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+        <Route path="/admin" element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        } />
+        <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
         {/* <Route path="/premium" element={<PremiumPage />} /> */}
         {/* <Route path="/upload" element={<UploadPage />} /> */}
       </Routes>
