@@ -65,81 +65,56 @@ const Chat = () => {
 
   // Socket connection effect
   useEffect(() => {
-    if (!token) {
-      setError("Authentication token not found");
-      return;
-    }
+    if (!user) return;
 
-    // Initialize socket connection
-    socketRef.current = io("http://localhost:5000", {
-      auth: { token },
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      transports: ['websocket', 'polling'],
-      withCredentials: true
+    const socket = io(import.meta.env.VITE_API_URL, {
+      auth: {
+        token: localStorage.getItem("token"),
+      },
     });
 
-    // Socket event listeners
-    socketRef.current.on("connect", () => {
-      console.log("Socket connected successfully");
+    socket.on("connect", () => {
+      console.log("Connected to socket server");
       setIsConnected(true);
       setError(null);
-      socketRef.current.emit("join_room", selectedRoom);
     });
 
-    socketRef.current.on("connect_error", (error) => {
+    socket.on("connect_error", (error) => {
       console.error("Socket connection error:", error);
-      setError(`Connection error: ${error.message}`);
+      setError("Failed to connect to chat server");
       setIsConnected(false);
     });
 
-    socketRef.current.on("error", (error) => {
-      console.error("Socket error:", error);
-      setError(`Socket error: ${error.message}`);
-      setIsConnected(false);
+    socket.on("receive_message", (message) => {
+      console.log("Received message:", message);
+      setMessages((prev) => [...prev, message]);
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     });
 
-    socketRef.current.on("room_messages", (roomMessages) => {
+    socket.on("room_messages", (roomMessages) => {
       console.log("Received room messages:", roomMessages);
       setMessages(roomMessages);
-      setIsLoading(false);
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     });
 
-    socketRef.current.on("receive_message", (message) => {
-      console.log("Received message:", message);
-      if (message.room === selectedRoom) {
-        setMessages((prev) => [...prev, message]);
-      }
-    });
+    socketRef.current = socket;
 
-    socketRef.current.on("message_removed", (messageId) => {
-      setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
-    });
-
-    socketRef.current.on("disconnect", (reason) => {
-      console.log("Socket disconnected:", reason);
-      setIsConnected(false);
-      setError(`Disconnected: ${reason}`);
-    });
-
-    // Cleanup function
     return () => {
-      if (socketRef.current) {
-        console.log("Cleaning up socket connection");
-        socketRef.current.disconnect();
-      }
+      socket.disconnect();
     };
-  }, [token]);
+  }, [user]);
 
-  // Effect for room changes
   useEffect(() => {
-    if (socketRef.current && isConnected) {
-      console.log("Joining room:", selectedRoom);
-      socketRef.current.emit("join_room", selectedRoom);
-      setIsLoading(true);
-    }
-  }, [selectedRoom, isConnected]);
+    if (!socketRef.current || !selectedRoom) return;
+
+    console.log("Joining room:", selectedRoom);
+    socketRef.current.emit("join_room", selectedRoom);
+
+    return () => {
+      console.log("Leaving room:", selectedRoom);
+      socketRef.current.emit("leave_room", selectedRoom);
+    };
+  }, [socketRef.current, selectedRoom]);
 
   // Message fetching effect
   useEffect(() => {
@@ -187,27 +162,21 @@ const Chat = () => {
     fetchMessages();
   }, [token, selectedRoom]);
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !isConnected || !socketRef.current) {
-      console.log("Cannot send message:", { 
-        hasMessage: !!newMessage.trim(), 
-        isConnected, 
-        hasSocket: !!socketRef.current 
+    if (!newMessage.trim() || !socketRef.current || !isConnected) return;
+
+    try {
+      console.log("Sending message to room:", selectedRoom);
+      socketRef.current.emit("send_message", {
+        content: newMessage.trim(),
+        room: selectedRoom,
       });
-      return;
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setError("Failed to send message");
     }
-
-    const messageData = {
-      content: newMessage,
-      room: selectedRoom,
-      senderName: user.name,
-      isAdmin: user.role === "admin",
-    };
-
-    console.log("Sending message:", messageData);
-    socketRef.current.emit("send_message", messageData);
-    setNewMessage("");
   };
 
   const handleRoomChange = (roomId) => {
@@ -339,6 +308,7 @@ const Chat = () => {
             placeholder={isConnected ? "Type a message..." : "Connecting to chat server..."}
             className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#bbd9e8] text-sm"
             disabled={!isConnected}
+            maxLength={500}
           />
           <button
             type="submit"
