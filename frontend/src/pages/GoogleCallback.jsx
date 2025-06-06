@@ -11,7 +11,11 @@ const GoogleCallback = () => {
     const token = searchParams.get('token');
     const userData = searchParams.get('user');
 
-    console.log('Received callback data:', { token: !!token, userData: !!userData });
+    console.log('Received callback data:', { 
+      hasToken: !!token, 
+      hasUserData: !!userData,
+      tokenPreview: token ? token.substring(0, 10) + '...' : null
+    });
 
     if (token && userData) {
       try {
