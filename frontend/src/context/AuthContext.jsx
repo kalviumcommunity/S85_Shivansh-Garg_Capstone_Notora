@@ -50,33 +50,41 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    console.log('Checking stored auth data:', {
-      hasToken: !!storedToken,
-      hasUser: !!storedUser
-    });
+    const initializeAuth = () => {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      console.log('Checking stored auth data:', {
+        hasToken: !!storedToken,
+        hasUser: !!storedUser
+      });
 
-    if (storedToken && storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
-        setToken(storedToken);
-        console.log('User authenticated:', userData);
-      } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+      if (storedToken && storedUser) {
+        try {
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+          setToken(storedToken);
+          console.log('User authenticated:', userData);
+        } catch (error) {
+          console.error('Error parsing stored user data:', error);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+          setToken(null);
+        }
+      } else {
+        setUser(null);
+        setToken(null);
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email, password) => {
     try {
       const response = await api.post('/api/auth/login', { email, password });
-
       const data = response.data;
       console.log('Login successful:', data);
 
@@ -107,7 +115,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
-    api, // Export the configured axios instance
+    api,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

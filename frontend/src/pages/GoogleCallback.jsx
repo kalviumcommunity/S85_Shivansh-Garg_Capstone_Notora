@@ -21,7 +21,7 @@ const GoogleCallback = () => {
         
         // Store token and user data
         localStorage.setItem('token', token);
-        localStorage.setItem('user', userData);
+        localStorage.setItem('user', JSON.stringify(parsedUserData));
         
         // Update auth context
         setUser(parsedUserData);
