@@ -11,10 +11,13 @@ const GoogleCallback = () => {
     const token = searchParams.get('token');
     const userData = searchParams.get('user');
 
+    console.log('Received callback data:', { token: !!token, userData: !!userData });
+
     if (token && userData) {
       try {
         // Parse user data
         const parsedUserData = JSON.parse(userData);
+        console.log('Parsed user data:', parsedUserData);
         
         // Store token and user data
         localStorage.setItem('token', token);
@@ -24,8 +27,8 @@ const GoogleCallback = () => {
         setUser(parsedUserData);
         setToken(token);
         
-        // Clear URL parameters and redirect to home
-        window.history.replaceState({}, document.title, '/');
+        console.log('Authentication successful, redirecting to home...');
+        // Redirect to home page
         navigate('/', { replace: true });
       } catch (error) {
         console.error('Error processing Google callback:', error);

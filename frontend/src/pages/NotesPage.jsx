@@ -7,16 +7,16 @@ import {
     CardDescription,
     CardHeader,
     CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/Input";
-import { Badge } from "@/components/ui/badge";
+} from "@/components/ui/Card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/Badge";
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/Select";
+} from "@/components/ui/select";
 import {
     Search,
     Download,

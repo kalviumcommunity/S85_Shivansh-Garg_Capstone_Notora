@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Button } from "./ui/Button";
+import { Button } from "./ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 import {
   BookOpen,
