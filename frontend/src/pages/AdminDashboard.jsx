@@ -8,7 +8,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/Badge";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, CheckCircle, XCircle, Clock, FileText, User } from 'lucide-react';
 
