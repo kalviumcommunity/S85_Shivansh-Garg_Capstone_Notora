@@ -14,7 +14,6 @@ router.get("/google", passport.authenticate("google", { scope: ["profile", "emai
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    successRedirect: process.env.FRONTEND_URL || "http://localhost:5173/",
     failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`,
     session: false
   }),
@@ -36,7 +35,7 @@ router.get(
       id: req.user._id,
       name: req.user.name,
       email: req.user.email,
-      role: req.user.role // Add role to the response
+      role: req.user.role
     };
     
     console.log('Sending user data:', userData);
@@ -46,7 +45,10 @@ router.get(
       user: JSON.stringify(userData)
     });
 
-    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/google/callback?${queryParams.toString()}`);
+    // Redirect to the frontend callback route
+    const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/google/callback?${queryParams.toString()}`;
+    console.log('Redirecting to:', redirectUrl);
+    res.redirect(redirectUrl);
   }
 );
 
