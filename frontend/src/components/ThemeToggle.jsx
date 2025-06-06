@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Sun, Moon } from "lucide-react";
-import { Button } from "./ui/Button"; // adjust path if needed
+import { Moon, Sun } from "lucide-react";
+import { Button } from "./ui/button"; // adjust path if needed
 
 export function ThemeToggle() {
   // track whether component has mounted (to avoid SSR mismatches)
