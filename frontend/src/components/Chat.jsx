@@ -67,10 +67,10 @@ const Chat = () => {
   useEffect(() => {
     if (!user) return;
 
-    const socket = io(import.meta.env.VITE_API_URL, {
+    const socket = io(import.meta.env.VITE_API_URL.replace(/\/$/, ''), {
       auth: {
-        token: localStorage.getItem("token"),
-      },
+        token: localStorage.getItem('token')
+      }
     });
 
     socket.on("connect", () => {
@@ -130,22 +130,18 @@ const Chat = () => {
       try {
         console.log("Fetching messages for room:", selectedRoom);
         const response = await fetch(
-          `http://localhost:5000/api/chat/messages/${selectedRoom}`,
+          `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api/chat/messages/${selectedRoom}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-            credentials: 'include'
+            credentials: "include",
           }
         );
 
-        if (response.status === 401) {
-          setError("Please log in to view messages");
-          return;
-        }
-
         if (!response.ok) {
-          throw new Error(`Failed to fetch messages: ${response.statusText}`);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to fetch messages: ${response.status}`);
         }
 
         const data = await response.json();

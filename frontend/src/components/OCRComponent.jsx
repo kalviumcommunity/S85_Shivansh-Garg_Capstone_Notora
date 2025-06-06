@@ -32,7 +32,7 @@ const OCRComponent = () => {
         formData.append('image', selectedFile);
 
         try {
-            const response = await axios.post('http://localhost:5000/api/ocr/process', formData, {
+            const response = await axios.post(`${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api/ocr/process`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

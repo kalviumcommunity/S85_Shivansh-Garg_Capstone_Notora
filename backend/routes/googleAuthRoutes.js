@@ -13,7 +13,11 @@ router.get("/google", passport.authenticate("google", { scope: ["profile", "emai
 // Google OAuth callback
 router.get(
   "/google/callback",
-  passport.authenticate("google", { session: false }),
+  passport.authenticate("google", {
+    successRedirect: process.env.FRONTEND_URL || "http://localhost:5173/",
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`,
+    session: false
+  }),
   (req, res) => {
     console.log('Google callback user:', {
       id: req.user._id,
@@ -42,7 +46,7 @@ router.get(
       user: JSON.stringify(userData)
     });
 
-    res.redirect(`http://localhost:5173/auth/google/callback?${queryParams.toString()}`);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/google/callback?${queryParams.toString()}`);
   }
 );
 
