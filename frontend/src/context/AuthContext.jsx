@@ -14,9 +14,12 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
-      console.log('Adding token to request:', token.substring(0, 10) + '...');
+      console.log('Adding token to request:', {
+        url: config.url,
+        tokenPreview: token.substring(0, 10) + '...'
+      });
     } else {
-      console.log('No token found in localStorage');
+      console.log('No token found in localStorage for request:', config.url);
     }
     return config;
   },
@@ -60,7 +63,8 @@ export const AuthProvider = ({ children }) => {
       
       console.log('Checking stored auth data:', {
         hasToken: !!storedToken,
-        hasUser: !!storedUser
+        hasUser: !!storedUser,
+        tokenPreview: storedToken ? storedToken.substring(0, 10) + '...' : null
       });
 
       if (storedToken && storedUser) {
