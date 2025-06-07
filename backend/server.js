@@ -47,10 +47,15 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Middleware
 app.use(cors({
-  origin: ["http://localhost:5173", "https://shivansh-notora.netlify.app"],
+  origin: [
+    "http://localhost:5173",
+    "https://shivansh-notora.netlify.app",
+    "https://notora-backend.onrender.com",
+    "https://notora.netlify.app"  // Add your frontend domain
+  ],
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

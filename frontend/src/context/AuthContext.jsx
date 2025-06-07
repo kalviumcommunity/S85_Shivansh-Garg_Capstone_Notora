@@ -92,9 +92,14 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      console.log('Attempting login with:', { email });
       const response = await api.post('/api/auth/login', { email, password });
       const data = response.data;
-      console.log('Login successful:', data);
+      console.log('Login response:', data);
+
+      if (!data.token || !data.user) {
+        throw new Error('Invalid response from server');
+      }
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -102,7 +107,7 @@ export const AuthProvider = ({ children }) => {
       setToken(data.token);
       return data;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error:', error.response?.data || error);
       throw error;
     }
   };
