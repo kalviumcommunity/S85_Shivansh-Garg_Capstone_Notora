@@ -54,7 +54,12 @@ router.get("/me", authMiddleware, getCurrentUser);
 // Login route
 router.post("/login", async (req, res) => {
   try {
-    console.log("Login attempt:", { email: req.body.email });
+    console.log("Login attempt:", { 
+      email: req.body.email,
+      hasPassword: !!req.body.password,
+      headers: req.headers,
+      origin: req.headers.origin
+    });
     
     const { email, password } = req.body;
 
@@ -73,6 +78,8 @@ router.post("/login", async (req, res) => {
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("Password match result:", isMatch);
+
     if (!isMatch) {
       console.log("Invalid password for user:", email);
       return res.status(401).json({ message: "Invalid credentials" });

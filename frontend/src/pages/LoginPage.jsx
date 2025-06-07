@@ -16,24 +16,10 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
-        email,
-        password,
-      });
-      
-      if (response.data.token) {
-        // Store token and user data
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        
-        // Use the login function from auth context
-        await login(email, password);
-        
-        alert("Login successful!");
-        navigate("/");
-      } else {
-        throw new Error("Invalid response from server");
-      }
+      // Use only the auth context login function
+      await login(email, password);
+      alert("Login successful!");
+      navigate("/");
     } catch (error) {
       console.error("Login error:", error.response?.data || error);
       alert(error.response?.data?.error || error.response?.data?.message || "Invalid credentials or server error");
