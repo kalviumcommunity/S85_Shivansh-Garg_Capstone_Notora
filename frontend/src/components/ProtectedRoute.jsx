@@ -2,7 +2,14 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, token } = useAuth();
+
+  console.log('ProtectedRoute - Auth state:', {
+    hasUser: !!user,
+    hasToken: !!token,
+    loading,
+    userPreview: user ? { id: user._id, name: user.name, role: user.role } : null
+  });
 
   if (loading) {
     return (
@@ -12,7 +19,8 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  if (!user) {
+  if (!user || !token) {
+    console.log('ProtectedRoute - No user or token found, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
