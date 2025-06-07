@@ -14,7 +14,8 @@ const GoogleCallback = () => {
     console.log('Received callback data:', { 
       hasToken: !!token, 
       hasUserData: !!userData,
-      tokenPreview: token ? token.substring(0, 10) + '...' : null
+      tokenPreview: token ? token.substring(0, 10) + '...' : null,
+      userDataPreview: userData ? userData.substring(0, 50) + '...' : null
     });
 
     if (token && userData) {
@@ -26,6 +27,15 @@ const GoogleCallback = () => {
         // Store token and user data
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(parsedUserData));
+        
+        // Verify storage
+        const storedToken = localStorage.getItem('token');
+        const storedUser = localStorage.getItem('user');
+        console.log('Verified storage:', {
+          hasStoredToken: !!storedToken,
+          hasStoredUser: !!storedUser,
+          storedTokenPreview: storedToken ? storedToken.substring(0, 10) + '...' : null
+        });
         
         // Update auth context
         setUser(parsedUserData);
