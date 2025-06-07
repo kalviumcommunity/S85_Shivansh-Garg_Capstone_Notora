@@ -4,38 +4,46 @@ const tokenStore = require("../utils/tokenStore");
 
 const authMiddleware = async (req, res, next) => {
   try {
-    console.log("Auth middleware - Request headers:", {
+    console.log("Auth middleware - Request details:", {
       authorization: req.header("Authorization") ? "Present" : "Missing",
       origin: req.headers.origin,
-      path: req.path
+      path: req.path,
+      method: req.method,
+      headers: req.headers
     });
 
     const authHeader = req.header("Authorization") || "";
     const [scheme, token] = authHeader.split(" ");
 
     if (scheme !== "Bearer" || !token) {
-      console.log("Invalid authorization header format");
+      console.log("Invalid authorization header format:", { authHeader });
       return res.status(401).json({ error: "No token, authorization denied" });
     }
 
     // Check if token is blacklisted
     const isBlacklisted = await tokenStore.get(`blacklist_${token}`);
     if (isBlacklisted) {
-      console.log("Token is blacklisted");
+      console.log("Token is blacklisted:", { tokenPreview: token.substring(0, 10) + '...' });
       return res.status(401).json({ error: "Token has been invalidated" });
     }
 
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("Token decoded successfully:", {
-        id: decoded.id,
-        iat: decoded.iat,
-        exp: decoded.exp
+      console.log("Verifying token with secret:", {
+        tokenPreview: token.substring(0, 10) + '...',
+        secretLength: process.env.JWT_SECRET?.length || 0
       });
 
-      const user = await User.findById(decoded.id);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("Token decoded successfully:", {
+        userId: decoded.userId,
+        iat: decoded.iat,
+        exp: decoded.exp,
+        currentTime: Math.floor(Date.now() / 1000)
+      });
+
+      const user = await User.findById(decoded.userId);
       if (!user) {
-        console.log("User not found for ID:", decoded.id);
+        console.log("User not found for ID:", decoded.userId);
         return res.status(401).json({ error: "User not found" });
       }
 
@@ -48,7 +56,12 @@ const authMiddleware = async (req, res, next) => {
       req.user = user._id;
       next();
     } catch (err) {
-      console.error("Token verification error:", err);
+      console.error("Token verification error:", {
+        name: err.name,
+        message: err.message,
+        expiredAt: err.expiredAt,
+        tokenPreview: token.substring(0, 10) + '...'
+      });
       res.status(401).json({ error: "Token is not valid" });
     }
   } catch (err) {
