@@ -34,10 +34,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.log('Received 401, clearing auth data');
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Only clear auth data if it's not a login request
+      if (!error.config.url.includes('/api/auth/login')) {
+        console.log('Received 401, clearing auth data');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -101,6 +104,7 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Invalid response from server');
       }
 
+      // Store token and user data
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);

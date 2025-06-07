@@ -4,28 +4,53 @@ const tokenStore = require("../utils/tokenStore");
 
 const authMiddleware = async (req, res, next) => {
   try {
+    console.log("Auth middleware - Request headers:", {
+      authorization: req.header("Authorization") ? "Present" : "Missing",
+      origin: req.headers.origin,
+      path: req.path
+    });
+
     const authHeader = req.header("Authorization") || "";
     const [scheme, token] = authHeader.split(" ");
 
     if (scheme !== "Bearer" || !token) {
+      console.log("Invalid authorization header format");
       return res.status(401).json({ error: "No token, authorization denied" });
     }
 
     // Check if token is blacklisted
     const isBlacklisted = await tokenStore.get(`blacklist_${token}`);
     if (isBlacklisted) {
+      console.log("Token is blacklisted");
       return res.status(401).json({ error: "Token has been invalidated" });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("Token decoded successfully:", {
+        id: decoded.id,
+        iat: decoded.iat,
+        exp: decoded.exp
+      });
 
-    if (!user) {
-      return res.status(401).json({ error: "User not found" });
+      const user = await User.findById(decoded.id);
+      if (!user) {
+        console.log("User not found for ID:", decoded.id);
+        return res.status(401).json({ error: "User not found" });
+      }
+
+      console.log("User authenticated:", {
+        id: user._id,
+        name: user.name,
+        role: user.role
+      });
+
+      req.user = user._id;
+      next();
+    } catch (err) {
+      console.error("Token verification error:", err);
+      res.status(401).json({ error: "Token is not valid" });
     }
-
-    req.user = user._id;
-    next();
   } catch (err) {
     console.error("Auth middleware error:", err);
     res.status(401).json({ error: "Token is not valid" });

@@ -32,27 +32,43 @@ import { Link } from "react-router-dom";
 const subjects = ["All", "Java", "C++", "Web Development", "Python", "Data Structures", "Algorithms"];
 
 export default function NotesPage() {
-    const { api } = useAuth();
+    const { api, user, token } = useAuth();
     const [notes, setNotes] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedSubject, setSelectedSubject] = useState("All");
     const [sortBy, setSortBy] = useState("date");
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        console.log('NotesPage - Auth state:', {
+            hasUser: !!user,
+            hasToken: !!token,
+            userPreview: user ? { id: user._id, name: user.name, role: user.role } : null
+        });
+
         const fetchNotes = async () => {
             try {
+                console.log('Fetching notes with token:', token ? 'Present' : 'Missing');
                 const response = await api.get('/api/notes');
+                console.log('Notes fetched successfully:', response.data.length);
                 setNotes(response.data);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching notes:", err);
                 setError("Failed to fetch notes. Please try again later.");
+            } finally {
+                setLoading(false);
             }
         };
 
-        fetchNotes();
-    }, [api]);
+        if (user && token) {
+            fetchNotes();
+        } else {
+            console.log('NotesPage - Missing user or token, not fetching notes');
+            setLoading(false);
+        }
+    }, [api, user, token]);
 
     const filteredNotes = notes
         .filter(
