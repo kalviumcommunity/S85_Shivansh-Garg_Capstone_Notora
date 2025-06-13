@@ -31,19 +31,19 @@ const features = [
 const announcements = [
   {
     title: "New Java Advanced Concepts Notes Available",
-    date: "2024-01-15",
+    date: "2025-05-15",
     type: "New Content",
     description: "Comprehensive notes on multithreading, collections, and design patterns.",
   },
   {
     title: "Premium Section Launch",
-    date: "2024-01-10",
+    date: "2025-06-11",
     type: "Feature",
     description: "Access exclusive content from industry experts and top universities.",
   },
   {
     title: "Mobile App Coming Soon",
-    date: "2024-01-05",
+    date: "2025-03-5",
     type: "Update",
     description: "Study on the go with our upcoming mobile application.",
   },

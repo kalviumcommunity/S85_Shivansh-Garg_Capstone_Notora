@@ -18,7 +18,6 @@ const LoginPage = () => {
     try {
       // Use only the auth context login function
       await login(email, password);
-      alert("Login successful!");
       navigate("/");
     } catch (error) {
       console.error("Login error:", error.response?.data || error);

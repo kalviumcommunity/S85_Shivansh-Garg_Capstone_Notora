@@ -46,7 +46,10 @@ router.get(
     });
 
     // Redirect to the frontend callback route
-    const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/google/callback?${queryParams.toString()}`;
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const redirectUrl = `${frontendUrl.replace(/\/+$/, '')}/auth/google/callback?${queryParams.toString()}`;
+    // const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/google/callback?${queryParams.toString()}`;
     console.log('Redirecting to:', redirectUrl);
     res.redirect(redirectUrl);
   }
