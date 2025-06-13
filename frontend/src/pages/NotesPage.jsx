@@ -100,7 +100,7 @@ export default function NotesPage() {
             navigate('/premium');
             return;
         }
-        
+
         // Track successful download
         trackUserAction.downloadNote(note._id, note.title, note.subject);
         window.open(note.fileUrl, '_blank');
@@ -119,7 +119,12 @@ export default function NotesPage() {
                     </p>
                 </div>
                 <Link to="/upload">
-                    <Button className="bg-primary text-primary-foreground hover:bg-primary/80">
+
+                    <Button
+                        style={{ backgroundColor: "#9AC9DE" }}
+                        className="text-primary-foreground hover:opacity-80"
+                    >
+
                         <Upload className="w-4 h-4 mr-2" />
                         Upload Notes
                     </Button>
@@ -203,8 +208,8 @@ export default function NotesPage() {
                         <CardHeader className="pb-3">
                             <div className="space-y-2">
                                 <Badge
-                                  className="bg-[#eaf0f5] text-[#3a5d74] shadow rounded-full px-4 py-1 text-sm font-semibold tracking-wide mx-auto mb-2 border-0"
-                                  style={{ boxShadow: '0 2px 8px 0 rgba(154, 201, 222, 0.10)' }}
+                                    className="bg-[#eaf0f5] text-[#3a5d74] shadow rounded-full px-4 py-1 text-sm font-semibold tracking-wide mx-auto mb-2 border-0"
+                                    style={{ boxShadow: '0 2px 8px 0 rgba(154, 201, 222, 0.10)' }}
                                 >
                                     {note.subject.charAt(0).toUpperCase() + note.subject.slice(1)}
                                 </Badge>
@@ -263,12 +268,16 @@ export default function NotesPage() {
                                 onClick={() => trackUserAction.downloadNote(note._id, note.title, note.subject)}
                             >
                                 <Button
-                                    className="w-full border border-[#9AC9DE] text-[#3a5d74] bg-white group-hover:bg-[#9AC9DE] group-hover:text-white group-hover:scale-105 transition-all duration-300 shadow-sm"
+                                    className={`w-full border border-[#e2e8f0] group-hover:scale-105 transition-all duration-300 shadow-sm ${
+                                        note.isPremium 
+                                            ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-600 hover:to-orange-600" 
+                                            : "text-[#3a5d74] bg-white group-hover:bg-[#9AC9DE] group-hover:text-white"
+                                    }`}
                                     variant={note.isPremium ? "default" : "outline"}
                                     style={{ boxShadow: '0 2px 8px 0 rgba(154, 201, 222, 0.10)' }}
                                 >
                                     <Download className="w-4 h-4 mr-2" />
-                                    {note.isPremium ? "Get Premium Access" : "Download"}
+                                    {note.isPremium ? "Premium Notes" : "Download"}
                                 </Button>
                             </a>
                         </CardContent>

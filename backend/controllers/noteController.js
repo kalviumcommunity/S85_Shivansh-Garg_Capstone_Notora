@@ -87,13 +87,30 @@ const uploadNote = async (req, res) => {
       return res.status(400).json({ error: "No file uploaded." });
     }
 
+    // Get file extension from original filename
+    const fileExtension = req.file.originalname.split('.').pop();
+    
+    // Clean the title for use in filename
+    const cleanTitle = title
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-') // Replace special chars and spaces with hyphens
+      .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+    
+    // Create a unique identifier (last 6 chars of timestamp)
+    const uniqueId = Date.now().toString().slice(-6);
+    
+    // Combine title and unique ID for the filename
+    const publicId = `${cleanTitle}-${uniqueId}`;
+
     // Upload to Cloudinary using stream
     const uploadPromise = new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: "notora",
           resource_type: "raw",
-          public_id: `${Date.now()}-${req.file.originalname.split('.')[0].replace(/[^a-zA-Z0-9]/g, '')}`,
+          public_id: publicId,
+          format: fileExtension, // Preserve original file format
         },
         (error, result) => {
           if (error) reject(error);
