@@ -64,18 +64,27 @@ export const AuthProvider = ({ children }) => {
       const storedToken = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
       
-      console.log('Checking stored auth data:', {
+      console.log('Initializing auth with stored data:', {
         hasToken: !!storedToken,
         hasUser: !!storedUser,
-        tokenPreview: storedToken ? storedToken.substring(0, 10) + '...' : null
+        tokenPreview: storedToken ? storedToken.substring(0, 10) + '...' : null,
+        userData: storedUser ? JSON.parse(storedUser) : null
       });
 
       if (storedToken && storedUser) {
         try {
           const userData = JSON.parse(storedUser);
-          setUser(userData);
+          // Ensure all required fields are present
+          const formattedUserData = {
+            _id: userData.id || userData._id,
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+            isPremium: userData.isPremium || false
+          };
+          console.log('Formatted user data:', formattedUserData);
+          setUser(formattedUserData);
           setToken(storedToken);
-          console.log('User authenticated:', userData);
         } catch (error) {
           console.error('Error parsing stored user data:', error);
           localStorage.removeItem('token');
@@ -98,16 +107,29 @@ export const AuthProvider = ({ children }) => {
       console.log('Attempting login with:', { email });
       const response = await api.post('/api/auth/login', { email, password });
       const data = response.data;
-      console.log('Login response:', data);
+      console.log('Login response:', {
+          hasToken: !!data.token,
+          hasUser: !!data.user,
+          userData: data.user
+      });
 
       if (!data.token || !data.user) {
         throw new Error('Invalid response from server');
       }
 
+      // Format user data consistently
+      const formattedUserData = {
+        _id: data.user.id || data.user._id,
+        name: data.user.name,
+        email: data.user.email,
+        role: data.user.role,
+        isPremium: data.user.isPremium || false
+      };
+
       // Store token and user data
       localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(formattedUserData));
+      setUser(formattedUserData);
       setToken(data.token);
       return data;
     } catch (error) {
