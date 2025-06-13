@@ -14,6 +14,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import UploadPage from "./pages/UploadPage";
 import PremiumPage from "./pages/PremiumPage";
 import OCRPage from "./pages/OCRPage";
+import GoogleAnalytics from "./components/GoogleAnalytics";
 // import PremiumPage from "./pages/PremiumPage";
 // import UploadPage from "./pages/UploadPage";
 
@@ -24,6 +25,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-white">
+      <GoogleAnalytics />
       {!hideNavbar && <Navbar />}
       <Routes>
         <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />

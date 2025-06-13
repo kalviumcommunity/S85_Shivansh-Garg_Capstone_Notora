@@ -27,7 +27,8 @@ import {
     Star,
     Eye,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { trackUserAction } from "../utils/analytics";
 
 const subjects = ["All", "Java", "C++", "Web Development", "Python", "Data Structures", "Algorithms"];
 
@@ -39,6 +40,7 @@ export default function NotesPage() {
     const [sortBy, setSortBy] = useState("date");
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         console.log('NotesPage - Auth state:', {
@@ -90,6 +92,19 @@ export default function NotesPage() {
                     );
             }
         });
+
+    const handleDownload = (note) => {
+        if (note.isPremium && !user?.isPremium) {
+            // Track attempt to download premium content
+            trackUserAction.viewPremiumContent('note');
+            navigate('/premium');
+            return;
+        }
+        
+        // Track successful download
+        trackUserAction.downloadNote(note._id, note.title, note.subject);
+        window.open(note.fileUrl, '_blank');
+    };
 
     return (
         <div className="space-y-8 px-6 md:px-12 lg:px-24 pt-8 pb-16">
@@ -245,6 +260,7 @@ export default function NotesPage() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="block"
+                                onClick={() => trackUserAction.downloadNote(note._id, note.title, note.subject)}
                             >
                                 <Button
                                     className="w-full border border-[#9AC9DE] text-[#3a5d74] bg-white group-hover:bg-[#9AC9DE] group-hover:text-white group-hover:scale-105 transition-all duration-300 shadow-sm"
