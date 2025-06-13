@@ -212,16 +212,16 @@ io.on("connection", (socket) => {
   });
 });
 
-// Delete messages older than 5 days every day at midnight
-cron.schedule('0 0 * * *', async () => {
-  const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
-  try {
-    await Message.deleteMany({ createdAt: { $lt: fiveDaysAgo } });
-    console.log('Old chat messages deleted');
-  } catch (err) {
-    console.error('Error deleting old messages:', err);
-  }
-});
+// // Delete messages older than 5 days every day at midnight
+// cron.schedule('0 0 * * *', async () => {
+//   const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
+//   try {
+//     await Message.deleteMany({ createdAt: { $lt: fiveDaysAgo } });
+//     console.log('Old chat messages deleted');
+//   } catch (err) {
+//     console.error('Error deleting old messages:', err);
+//   }
+// });
 
 // Start server
 httpServer.listen(PORT, () => {
