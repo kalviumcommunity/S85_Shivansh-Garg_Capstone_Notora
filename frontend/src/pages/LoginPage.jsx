@@ -4,6 +4,7 @@ import axios from "axios";
 import { FiLock } from "react-icons/fi";
 import SocialLoginButtons from "./SocialLoginButtons";
 import { useAuth } from "../context/AuthContext";
+import { trackUserAction } from "../utils/analytics";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -18,6 +19,7 @@ const LoginPage = () => {
     try {
       // Use only the auth context login function
       await login(email, password);
+      trackUserAction.login('email'); // Track successful login
       navigate("/");
     } catch (error) {
       console.error("Login error:", error.response?.data || error);

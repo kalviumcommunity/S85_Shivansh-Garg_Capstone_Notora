@@ -1,7 +1,9 @@
+import React from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
 import { Crown, Star, Check, Download, Users, BookOpen, Zap, Shield, Headphones } from "lucide-react"
+import { trackUserAction } from "../utils/analytics"
 
 const plans = [
   {
@@ -117,6 +119,16 @@ const benefits = [
 ]
 
 export default function PremiumPage() {
+  const handleUpgradeClick = (plan) => {
+    trackUserAction.upgradeToPremium(plan);
+    // Add your upgrade logic here
+  };
+
+  const handlePremiumContentClick = (contentType) => {
+    trackUserAction.viewPremiumContent(contentType);
+    // Add your premium content viewing logic here
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 space-y-16">
       {/* Hero Section */}
@@ -212,6 +224,7 @@ export default function PremiumPage() {
                   className={`w-full transition-all duration-300 hover:scale-105 border border-[#e2e8f0] ${
                     plan.popular ? "bg-[#bbd9e8] hover:bg-[#a8c8d8] text-white" : ""
                   }`}
+                  onClick={() => handleUpgradeClick(plan)}
                 >
                   {plan.buttonText}
                 </Button>
@@ -269,7 +282,10 @@ export default function PremiumPage() {
                   <div className="font-bold text-[#bbd9e8]">{note.price}</div>
                 </div>
 
-                <Button className="w-full bg-gradient-to-r from-[#bbd9e8] to-[#a8c8d8] hover:from-[#a8c8d8] hover:to-[#bbd9e8] text-white transition-all duration-300 hover:scale-105 border border-[#e2e8f0]">
+                <Button 
+                  className="w-full bg-gradient-to-r from-[#bbd9e8] to-[#a8c8d8] hover:from-[#a8c8d8] hover:to-[#bbd9e8] text-white transition-all duration-300 hover:scale-105 border border-[#e2e8f0]"
+                  onClick={() => trackUserAction.viewPremiumContent('note')}
+                >
                   <Crown className="w-4 h-4 mr-2" />
                   Get Premium Access
                 </Button>
@@ -291,6 +307,7 @@ export default function PremiumPage() {
           <Button 
             size="lg" 
             className="bg-[#bbd9e8] hover:bg-[#a8c8d8] text-white transition-all duration-300 hover:scale-105 animate-pulse-subtle border border-[#e2e8f0]"
+            onClick={() => trackUserAction.upgradeToPremium('premium')}
           >
             <Crown className="w-5 h-5 mr-2" />
             Start Premium Trial

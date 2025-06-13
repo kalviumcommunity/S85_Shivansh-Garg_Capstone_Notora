@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
+import { trackUserAction } from "../utils/analytics";
 
 const getNavigation = (isAdmin) => {
   const baseNav = [
@@ -58,6 +59,7 @@ export default function Navbar() {
     try {
       // Use the logout function from auth context
       logout();
+      trackUserAction.logout(); // Track logout event
       
       // Close dropdown
       setDropdownOpen(false);

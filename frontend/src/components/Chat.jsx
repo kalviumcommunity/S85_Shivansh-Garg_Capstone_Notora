@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Send, Smile, MessageSquare, Users, HelpCircle, Star, Shield, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import axios from 'axios';
+import { trackUserAction } from "../utils/analytics";
 
 // Simple emoji list for demo
 const EMOJIS = [
@@ -168,6 +169,7 @@ const Chat = () => {
         content: newMessage.trim(),
         room: selectedRoom,
       });
+      trackUserAction.sendMessage(selectedRoom);
       setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
@@ -179,6 +181,7 @@ const Chat = () => {
     setSelectedRoom(roomId);
     setMessages([]);
     setIsLoading(true);
+    trackUserAction.joinChatRoom(roomId);
   };
 
   if (!user) {

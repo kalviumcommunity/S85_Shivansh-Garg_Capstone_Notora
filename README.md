@@ -1,76 +1,158 @@
-# 📚 Notora - Simplified Lecture Notes Organizer
+# 📚 Notora - Your Ultimate Study Companion
 
-## 🧠 Project Idea
-
-**Notora** is a MERN stack-based web application designed to organize and manage lecture notes effectively. It acts as a community-driven platform where users can upload, download, and access high-quality lecture notes for subjects like **Java**, **C++**, and **Web Development**.
-
-The platform offers both **free** and **premium** note sections, making it easier for students to find reliable resources. Additionally, it leverages **OCR (Optical Character Recognition)** via an API to extract searchable text from images of handwritten or printed notes. Users can interact through a chat feature, making this a collaborative platform for learners.
-
----
+Notora is a comprehensive MERN stack web application designed to revolutionize how students organize, share, and access lecture notes. With a beautiful, modern UI and powerful features, Notora makes learning more efficient and collaborative.
 
 ## 🌟 Key Features
 
-- 📤 Upload and 📥 download notes (PDF/Image formats)
-- 🧾 OCR to extract text from images
-- 🗂 Categorized by subject: Java, C++, Web Dev
-- 💬 Community chatroom for discussion
-- 🔐 User authentication (Login/Register)
-- ⭐ Premium section for paid resources
-- 🌐 Beautiful UI/UX with responsive design
+### 📝 Note Management
+- Upload and download notes in multiple formats (PDF, DOCX, TXT)
+- Categorize notes by subjects (Java, C++, Web Development, Python, etc.)
+- Premium and free content sections
+- Advanced search and filtering capabilities
+- View note statistics (downloads, views, ratings)
 
----
+### 🔍 OCR Technology
+- Extract text from images of handwritten or printed notes
+- Convert physical notes to digital format
+- Searchable text extraction
+- Support for various image formats
 
-## 🗓️ Capstone Journey Plan (Day-by-Day)
+### 💬 Community Features
+- Real-time chat system for peer discussions
+- Subject-specific chat rooms
+- Admin-moderated conversations
+- User roles and permissions
 
-| **Day** | **Task** |
-|--------|---------|
-| Day 1  | Brainstorm features, plan folder structure, create README |
-| Day 2  | Set up backend with Express and MongoDB Atlas |
-| Day 3  | Create User schema and routes for Register/Login |
-| Day 4  | Set up frontend with React & Tailwind CSS |
-| Day 5  | Build Register & Login UI, connect frontend to backend |
-| Day 6  | Implement authentication (JWT & password hashing) |
-| Day 7  | Design and develop Home page with project description and announcements |
-| Day 8  | Create Notes Upload UI + backend API for storing notes |
-| Day 9  | Enable file upload functionality using Multer or base64 |
-| Day 10 | Display uploaded notes in a grid layout |
-| Day 11 | Integrate OCR API to convert image notes into searchable text |
-| Day 12 | Add note description and due date input features |
-| Day 13 | Implement delete note functionality with icon on UI |
-| Day 14 | Add subject-wise filtering (Java, C++, Web Dev) |
-| Day 15 | Create premium notes section with access control |
-| Day 16 | Design and implement the Chat Page for community interaction |
-| Day 17 | Build and integrate a responsive NavBar across all pages |
-| Day 18 | Final testing and debugging |
-| Day 19 | UI polishing and UX improvements |
-| Day 20 | Deploy the application using Render/Vercel (frontend) and Railway/Render (backend) |
-| Day 21 | Prepare documentation, walkthrough video, and final README updates |
+### 👤 User Features
+- Secure authentication (Email/Password and Google OAuth)
+- User profiles with activity tracking
+- Premium content access
+- Admin dashboard for content management
 
----
+### 💎 Premium Features
+- Exclusive access to premium notes
+- Advanced search capabilities
+- Priority support
+- Unlimited downloads
+- Early access to new content
+- Ad-free experience
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** React.js, Tailwind CSS  
-  🔗 **Frontend Live:** [https://shivansh-notora.netlify.app/](https://shivansh-notora.netlify.app/)
-- **Backend:** Node.js, Express.js  
-  🔗 **Backend Live:** [https://s85-shivansh-garg-capstone-notora.onrender.com/](https://s85-shivansh-garg-capstone-notora.onrender.com/)
-- **Database:** MongoDB Atlas
-- **Authentication:** JWT, bcrypt
-- **File Handling:** Multer / Base64 Encoding
-- **OCR API:** (to be selected - e.g., OCR.space or Tesseract via external API)
-- **Deployment:** 
-  - **Frontend:** Netlify  
-  - **Backend:** [Render](https://s85-shivansh-garg-capstone-notora.onrender.com/)
+### Frontend
+- React.js with modern hooks and context
+- Tailwind CSS for styling
+- Responsive design for all devices
+- Real-time updates using WebSocket
+
+### Backend
+- Node.js with Express.js
+- MongoDB for database
+- JWT for authentication
+- Socket.IO for real-time chat
+- Multer for file uploads
+- OCR API integration
+
+### Authentication
+- JWT-based authentication
+- Google OAuth integration
+- Secure password hashing
+- Protected routes
+
+### Deployment
+- Frontend: Netlify
+- Backend: Render
+- Database: MongoDB Atlas
+
+## 🚀 Getting Started
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   # Frontend
+   cd frontend
+   npm install
+
+   # Backend
+   cd backend
+   npm install
+   ```
+3. Set up environment variables:
+   - Create `.env` files in both frontend and backend directories
+   - Add necessary environment variables
+
+4. Start the development servers:
+   ```bash
+   # Frontend
+   npm run dev
+
+   # Backend
+   npm run dev
+   ```
+
+## 📱 Features in Detail
+
+### Note Management
+- Upload notes with title, subject, and description
+- Mark notes as premium or free
+- Download notes with proper attribution
+- View note statistics and ratings
+- Filter notes by subject and search by title/description
+
+### OCR Processing
+- Upload images of notes
+- Extract text using OCR technology
+- Preview extracted text
+- Download processed content
+- Support for multiple image formats
+
+### Chat System
+- Real-time messaging
+- Subject-specific chat rooms
+- Admin moderation capabilities
+- User presence indicators
+- Message history
+
+### Premium Content
+- Tiered pricing structure
+- Exclusive content access
+- Advanced features for premium users
+- Revenue sharing for content creators
+
+## 🔐 Security Features
+- JWT-based authentication
+- Password hashing with bcrypt
+- Protected API routes
+- File upload validation
+- Rate limiting
+- CORS configuration
+
+## 🎨 UI/UX Features
+- Modern, clean design
+- Responsive layout
+- Loading states and animations
+- Error handling and user feedback
+- Intuitive navigation
+- Dark/Light mode support
+
+## 📈 Future Enhancements
+- Mobile application
+- Payment gateway integration
+- Advanced analytics dashboard
+- AI-powered note recommendations
+- Collaborative note editing
+- Video content support
+- Offline mode
+- Export notes in multiple formats
+
+## 🤝 Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 👨‍💻 Author
+Created with ❤️ by Shivansh Garg
 
 ---
-
-## 💡 Future Enhancements
-
-- Like/Comment system on notes  
-- Admin dashboard for managing premium content  
-- Payment gateway for premium notes  
-- Dark mode and UI customizations  
-
----
-
-> Created with ❤️ by Shivansh Garg
+For any queries or support, please reach out to the development team.
