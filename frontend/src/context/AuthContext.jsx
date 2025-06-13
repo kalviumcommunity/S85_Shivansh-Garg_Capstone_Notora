@@ -146,6 +146,32 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
   };
 
+  const updatePremiumStatus = async (isPremium) => {
+    try {
+      if (!user?._id) {
+        throw new Error('No user logged in');
+      }
+
+      const response = await api.patch('/api/auth/update-premium', {
+        userId: user._id,
+        isPremium
+      });
+
+      const updatedUserData = {
+        ...user,
+        isPremium: response.data.user.isPremium
+      };
+
+      localStorage.setItem('user', JSON.stringify(updatedUserData));
+      setUser(updatedUserData);
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error updating premium status:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     setUser,
@@ -155,6 +181,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     api,
+    updatePremiumStatus
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

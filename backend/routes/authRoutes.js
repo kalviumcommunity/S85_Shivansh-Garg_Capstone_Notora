@@ -159,7 +159,8 @@ router.post("/register", async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      isPremium: user.isPremium
     };
 
     res.status(201).json({
@@ -169,6 +170,46 @@ router.post("/register", async (req, res) => {
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({ message: "Server error during registration" });
+  }
+});
+
+// Update user premium status
+router.patch("/update-premium", async (req, res) => {
+  try {
+    const { userId, isPremium } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { isPremium: isPremium },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    console.log("Updated user premium status:", {
+      userId: user._id,
+      isPremium: user.isPremium
+    });
+
+    res.json({
+      message: "Premium status updated successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isPremium: user.isPremium
+      }
+    });
+  } catch (error) {
+    console.error("Error updating premium status:", error);
+    res.status(500).json({ message: "Server error updating premium status" });
   }
 });
 
