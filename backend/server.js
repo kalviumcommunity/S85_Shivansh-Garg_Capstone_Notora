@@ -158,7 +158,7 @@ io.on("connection", (socket) => {
 
       // Fetch recent messages for the room
       const messages = await Message.find({ room })
-        .sort({ timestamp: -1 })
+        .sort({ timestamp: 1 })
         .limit(50)
         .populate("sender", "name");
 
