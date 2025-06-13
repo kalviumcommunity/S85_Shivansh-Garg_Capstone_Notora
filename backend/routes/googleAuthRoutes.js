@@ -35,7 +35,8 @@ router.get(
       id: req.user._id,
       name: req.user.name,
       email: req.user.email,
-      role: req.user.role
+      role: req.user.role,
+      isPremium: req.user.isPremium
     };
     
     console.log('Sending user data:', userData);

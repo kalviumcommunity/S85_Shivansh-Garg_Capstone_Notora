@@ -182,6 +182,12 @@ router.patch("/update-premium", async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
+    console.log("Updating premium status:", {
+      userId,
+      isPremium,
+      currentTime: new Date().toISOString()
+    });
+
     const user = await User.findByIdAndUpdate(
       userId,
       { isPremium: isPremium },
@@ -194,7 +200,10 @@ router.patch("/update-premium", async (req, res) => {
 
     console.log("Updated user premium status:", {
       userId: user._id,
-      isPremium: user.isPremium
+      name: user.name,
+      email: user.email,
+      isPremium: user.isPremium,
+      updatedAt: new Date().toISOString()
     });
 
     res.json({

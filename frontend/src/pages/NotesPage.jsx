@@ -275,10 +275,11 @@ export default function NotesPage() {
                                     console.log('Download attempt:', {
                                         noteIsPremium: note.isPremium,
                                         userIsPremium: user?.isPremium,
+                                        userRole: user?.role,
                                         userData: user
                                     });
                                     
-                                    if (note.isPremium && !user?.isPremium) {
+                                    if (note.isPremium && !user?.isPremium && user?.role !== 'admin') {
                                         e.preventDefault();
                                         navigate('/premium');
                                         window.scrollTo(0, 0);

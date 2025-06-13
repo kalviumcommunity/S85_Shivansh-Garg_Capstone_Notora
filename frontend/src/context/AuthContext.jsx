@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }) => {
             name: userData.name,
             email: userData.email,
             role: userData.role,
-            isPremium: userData.isPremium || false
+            isPremium: userData.isPremium === undefined ? false : userData.isPremium
           };
           console.log('Formatted user data:', formattedUserData);
           setUser(formattedUserData);
@@ -123,7 +123,7 @@ export const AuthProvider = ({ children }) => {
         name: data.user.name,
         email: data.user.email,
         role: data.user.role,
-        isPremium: data.user.isPremium || false
+        isPremium: data.user.isPremium === undefined ? false : data.user.isPremium
       };
 
       // Store token and user data
