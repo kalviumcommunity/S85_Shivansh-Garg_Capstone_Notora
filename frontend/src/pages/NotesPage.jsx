@@ -46,7 +46,13 @@ export default function NotesPage() {
         console.log('NotesPage - Auth state:', {
             hasUser: !!user,
             hasToken: !!token,
-            userPreview: user ? { id: user._id, name: user.name, role: user.role } : null
+            userPreview: user ? { 
+                id: user._id, 
+                name: user.name, 
+                role: user.role,
+                isPremium: user.isPremium,
+                fullUserObject: user  // Log the entire user object
+            } : null
         });
 
         const fetchNotes = async () => {
@@ -261,11 +267,25 @@ export default function NotesPage() {
                             </div>
 
                             <a
-                                href={note.fileUrl}
+                                href={note.isPremium && !user?.isPremium ? undefined : note.fileUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="block"
-                                onClick={() => trackUserAction.downloadNote(note._id, note.title, note.subject)}
+                                onClick={(e) => {
+                                    console.log('Download attempt:', {
+                                        noteIsPremium: note.isPremium,
+                                        userIsPremium: user?.isPremium,
+                                        userData: user
+                                    });
+                                    
+                                    if (note.isPremium && !user?.isPremium) {
+                                        e.preventDefault();
+                                        navigate('/premium');
+                                        window.scrollTo(0, 0);
+                                    } else {
+                                        trackUserAction.downloadNote(note._id, note.title, note.subject);
+                                    }
+                                }}
                             >
                                 <Button
                                     className={`w-full border border-[#e2e8f0] group-hover:scale-105 transition-all duration-300 shadow-sm ${
@@ -277,7 +297,7 @@ export default function NotesPage() {
                                     style={{ boxShadow: '0 2px 8px 0 rgba(154, 201, 222, 0.10)' }}
                                 >
                                     <Download className="w-4 h-4 mr-2" />
-                                    {note.isPremium ? "Premium Notes" : "Download"}
+                                    {note.isPremium && !user?.isPremium ? "Get Premium Access" : note.isPremium ? "Download Premium" : "Download"}
                                 </Button>
                             </a>
                         </CardContent>

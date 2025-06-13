@@ -97,10 +97,15 @@ router.post("/login", async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
+      isPremium: user.isPremium
     };
 
-    console.log("Login successful for user:", user.name);
+    console.log("Login successful for user:", {
+      name: user.name,
+      role: user.role,
+      isPremium: user.isPremium
+    });
     res.json({
       token,
       user: userResponse
