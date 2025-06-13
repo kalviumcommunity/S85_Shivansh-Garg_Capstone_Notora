@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FiLock } from "react-icons/fi";
-import SocialLoginButtons from "./SocialLoginButtons";
+import SocialLoginButtons from "./SocialSignupButtons";
 
 const SignupPage = () => {
   const [name, setName] = useState("");
@@ -29,11 +29,10 @@ const SignupPage = () => {
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
       
-      alert("Signup successful!");
       navigate("/");
     } catch (error) {
       console.error('Signup error:', error.response?.data);
-      alert(error.response?.data?.error || "Signup failed!");
+
     } finally {
       setLoading(false);
     }
