@@ -58,7 +58,14 @@ export default function NotesPage() {
         const fetchNotes = async () => {
             try {
                 console.log('Fetching notes with token:', token ? 'Present' : 'Missing');
-                const response = await api.get('/api/notes');
+                // Use api if available, otherwise fallback to fetch
+                let response;
+                if (api) {
+                    response = await api.get('/api/notes');
+                } else {
+                    response = await fetch(`${import.meta.env.VITE_API_URL}/api/notes`);
+                    response = { data: await response.json() };
+                }
                 console.log('Notes fetched successfully:', response.data.length);
                 setNotes(response.data);
                 setError(null);
@@ -70,12 +77,7 @@ export default function NotesPage() {
             }
         };
 
-        if (user && token) {
-            fetchNotes();
-        } else {
-            console.log('NotesPage - Missing user or token, not fetching notes');
-            setLoading(false);
-        }
+        fetchNotes();
     }, [api, user, token]);
 
     const filteredNotes = notes
@@ -106,7 +108,6 @@ export default function NotesPage() {
             navigate('/premium');
             return;
         }
-
         // Track successful download
         trackUserAction.downloadNote(note._id, note.title, note.subject);
         window.open(note.fileUrl, '_blank');
@@ -124,17 +125,31 @@ export default function NotesPage() {
                         Discover and download high-quality study materials
                     </p>
                 </div>
-                <Link to="/upload">
-
-                    <Button
-                        style={{ backgroundColor: "#9AC9DE" }}
-                        className="text-primary-foreground hover:opacity-80"
-                    >
-
-                        <Upload className="w-4 h-4 mr-2" />
-                        Upload Notes
-                    </Button>
-                </Link>
+                <div className="w-full md:w-auto flex flex-col items-end">
+                    {user ? (
+                        <Link to="/upload">
+                            <Button
+                                style={{ backgroundColor: "#9AC9DE" }}
+                                className="text-primary-foreground hover:opacity-80"
+                            >
+                                <Upload className="w-4 h-4 mr-2" />
+                                Upload Notes
+                            </Button>
+                        </Link>
+                    ) : (
+                        <div className="flex flex-col items-end">
+                            <button
+                                className="flex items-center bg-gray-300 text-gray-500 py-2 px-4 rounded-lg font-medium cursor-not-allowed mb-1"
+                                title="You are required to login to use this feature"
+                                disabled
+                            >
+                                <Upload className="w-4 h-4 mr-2" />
+                                Upload Notes
+                            </button>
+                            <span className="text-sm text-gray-500 ml-1">You need to create an account before uploading notes.</span>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Search and Filters Container */}

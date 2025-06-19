@@ -5,6 +5,7 @@ import { Send, Smile, MessageSquare, Users, HelpCircle, Star, Shield, Trash2 } f
 import { cn } from '../lib/utils';
 import axios from 'axios';
 import { trackUserAction } from "../utils/analytics";
+import { Link } from "react-router-dom";
 
 // Simple emoji list for demo
 const EMOJIS = [
@@ -120,31 +121,22 @@ const Chat = () => {
   // Message fetching effect
   useEffect(() => {
     const fetchMessages = async () => {
-      if (!token) {
-        setError("Authentication token not found");
-        return;
-      }
-
       setIsLoading(true);
       setError(null);
-
       try {
         console.log("Fetching messages for room:", selectedRoom);
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
         const response = await fetch(
           `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api/chat/messages/${selectedRoom}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            credentials: "include",
+            headers,
+            credentials: token ? "include" : undefined,
           }
         );
-
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.message || `Failed to fetch messages: ${response.status}`);
         }
-
         const data = await response.json();
         console.log("Fetched messages:", data);
         setMessages(data);
@@ -155,7 +147,6 @@ const Chat = () => {
         setIsLoading(false);
       }
     };
-
     fetchMessages();
   }, [token, selectedRoom]);
 
@@ -183,14 +174,6 @@ const Chat = () => {
     setIsLoading(true);
     trackUserAction.joinChatRoom(roomId);
   };
-
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-600">Please log in to access the chat</p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden border-t border-[#d4e6f0] mt-16">
@@ -254,7 +237,7 @@ const Chat = () => {
             </div>
           ) : (
             messages.map((message, index) => {
-              const isCurrentUser = message.sender === user._id;
+              const isCurrentUser = user && message.sender === user._id;
               const isAdmin = message.isAdmin;
               return (
                 <div
@@ -326,24 +309,33 @@ const Chat = () => {
         </div>
 
         {/* Message Input */}
-        <div className="bg-white p-4 border-t border-[#d4e6f0]">
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1 px-4 py-2 rounded-lg border border-[#d4e6f0] focus:outline-none focus:border-[#2c4a5c]"
-            />
-            <button
-              type="submit"
-              disabled={!isConnected}
-              className="px-4 py-2 bg-[#2c4a5c] text-white rounded-lg hover:bg-[#1e3444] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Send className="w-5 h-5" />
-            </button>
-          </form>
-        </div>
+        {user ? (
+          <div className="bg-white p-4 border-t border-[#d4e6f0]">
+            <form onSubmit={handleSendMessage} className="flex gap-2">
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type a message..."
+                className="flex-1 px-4 py-2 rounded-lg border border-[#d4e6f0] focus:outline-none focus:border-[#2c4a5c]"
+              />
+              <button
+                type="submit"
+                disabled={!isConnected}
+                className="px-4 py-2 bg-[#2c4a5c] text-white rounded-lg hover:bg-[#1e3444] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="p-4 text-center bg-white border-t border-[#e2e8f0]">
+            <p className="text-gray-600 mb-2">You are required to login to use this feature.</p>
+            <Link to="/login">
+              <button className="bg-[#bbd9e8] text-gray-800 hover:bg-[#a8c8d7] py-2 px-4 rounded-lg font-medium transition-colors">Login</button>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

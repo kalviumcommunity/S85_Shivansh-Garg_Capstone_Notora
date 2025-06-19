@@ -17,6 +17,7 @@ import {
 import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
 import { trackUserAction } from "../utils/analytics";
+import PremiumBadge from "./PremiumBadge";
 
 const getNavigation = (isAdmin) => {
   const baseNav = [
@@ -138,13 +139,17 @@ export default function Navbar() {
                   className="flex items-center space-x-2"
                 >
                   <User className="w-5 h-5" />
+                  {user.isPremium && <PremiumBadge className="ml-2" />}
                 </Button>
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white border rounded-xl shadow-xl animate-fade-in">
                     <div className="px-4 py-2 border-b font-semibold text-gray-700">
-                      {user.name}
+                      <div className="flex items-center justify-between">
+                        <span>{user.name}</span>
+                        {/* {user.isPremium && <PremiumBadge />} */}
+                      </div>
                       {user.role === 'admin' && (
-                        <span className="ml-2 text-xs text-blue-600">(Admin)</span>
+                        <span className="text-xs text-blue-600">(Admin)</span>
                       )}
                     </div>
                     {user.role === 'admin' && (
@@ -199,6 +204,14 @@ export default function Navbar() {
                 <span>{item.name}</span>
               </Link>
             ))}
+            {user && (
+              <div className="px-3 py-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700">{user.name}</span>
+                  {user.isPremium && <PremiumBadge />}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

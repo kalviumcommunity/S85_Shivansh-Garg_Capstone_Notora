@@ -1,9 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/Card"
 import { Badge } from "@/components/ui/Badge"
 import { Crown, Star, Check, Download, Users, BookOpen, Zap, Shield, Headphones } from "lucide-react"
 import { trackUserAction } from "../utils/analytics"
+import PaymentForm from "@/components/PaymentForm"
+import { useAuth } from "@/context/AuthContext"
+import { useNavigate } from "react-router-dom"
+import { toast } from "react-hot-toast"
 
 const plans = [
   {
@@ -119,15 +123,62 @@ const benefits = [
 ]
 
 export default function PremiumPage() {
+  const [showPayment, setShowPayment] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   const handleUpgradeClick = (plan) => {
-    trackUserAction.upgradeToPremium(plan);
-    // Add your upgrade logic here
+    if (!user) {
+      toast.error('You are required to login to use this feature');
+      navigate('/login');
+      return;
+    }
+
+    if (user.isPremium) {
+      toast.success('You are already a premium user!');
+      return;
+    }
+
+    if (plan.name === 'Premium') {
+      setShowPayment(true);
+      trackUserAction.upgradeToPremium(plan);
+    } else if (plan.name === 'Pro') {
+      toast.info('Pro plan coming soon!');
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPayment(false);
+    toast.success('Welcome to Premium!');
+    navigate('/');
   };
 
   const handlePremiumContentClick = (contentType) => {
+    if (!user?.isPremium) {
+      toast.error('You are required to login to use this feature');
+      navigate('/login');
+      return;
+    }
     trackUserAction.viewPremiumContent(contentType);
-    // Add your premium content viewing logic here
   };
+
+  if (showPayment) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <Card className="border border-[#e2e8f0]">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center">Upgrade to Premium</CardTitle>
+            <CardDescription className="text-center">
+              Get access to all premium features for just ₹199
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PaymentForm onSuccess={handlePaymentSuccess} />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-16">

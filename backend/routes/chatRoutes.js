@@ -4,8 +4,8 @@ const Message = require('../models/chatModel');
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { adminMiddleware } = require('../middlewares/adminMiddleware');
 
-// Get messages for a specific room (any authenticated user)
-router.get('/messages/:room', authMiddleware, async (req, res) => {
+// Get messages for a specific room (public)
+router.get('/messages/:room', async (req, res) => {
   try {
     const messages = await Message.find({ room: req.params.room })
       .sort({ timestamp: 1 })
