@@ -16,7 +16,7 @@ const {
 } = require("../controllers/noteController");
 
 // Regular user routes
-router.get("/", authMiddleware, getAllNotes);
+router.get("/", getAllNotes);
 router.post("/", authMiddleware, upload, handleMulterError, uploadNote);
 router.get("/:id", authMiddleware, getNoteById);
 router.put("/:id", authMiddleware, upload, handleMulterError, updateNote);

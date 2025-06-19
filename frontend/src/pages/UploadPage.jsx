@@ -1,12 +1,14 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { Upload, FileText, Star, CheckCircle, AlertCircle, Info } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const subjects = ["Java", "C++", "Web Development", "Python", "Data Structures", "Algorithms"];
 
 const UploadPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: "",
     subject: "",
@@ -115,6 +117,18 @@ const UploadPage = () => {
       setIsUploading(false);
     }
   };
+
+  if (!user) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-8 p-6 text-center">
+        <h1 className="text-3xl font-bold mb-4">Upload Your Notes</h1>
+        <p className="text-gray-600 mb-6">You are required to login to use this feature.</p>
+        <Link to="/login">
+          <button className="bg-[#bbd9e8] text-gray-800 hover:bg-[#a8c8d7] py-2 px-4 rounded-lg font-medium transition-colors">Login</button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8 p-6">

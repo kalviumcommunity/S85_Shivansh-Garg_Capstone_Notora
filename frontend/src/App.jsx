@@ -28,20 +28,20 @@ function AppContent() {
       <GoogleAnalytics />
       {!hideNavbar && <Navbar />}
       <Routes>
-        <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/notes" element={<ProtectedRoute><NotesPage /></ProtectedRoute>} />
+        <Route path="/notes" element={<NotesPage />} />
         <Route path="/auth/google/callback" element={<GoogleCallback />} />
-        <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+        <Route path="/chat" element={<ChatPage />} />
         <Route path="/admin" element={
           <AdminRoute>
             <AdminDashboard />
           </AdminRoute>
         } />
-        <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
-        <Route path="/premium" element={<ProtectedRoute><PremiumPage /></ProtectedRoute>} />
-        <Route path="/ocr" element={<ProtectedRoute><OCRPage /></ProtectedRoute>} />
+        <Route path="/upload" element={<UploadPage />} />
+        <Route path="/premium" element={<PremiumPage />} />
+        <Route path="/ocr" element={<OCRPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
         {/* <Route path="/premium" element={<PremiumPage />} /> */}
         {/* <Route path="/upload" element={<UploadPage />} /> */}

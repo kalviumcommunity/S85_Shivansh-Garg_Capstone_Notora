@@ -51,7 +51,7 @@ app.use(cors({
     "http://localhost:5173",
     "https://shivansh-notora.netlify.app",
     "https://notora-backend.onrender.com",
-    "https://notora.netlify.app"  // Add your frontend domain
+    "https://notora.netlify.app"
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
