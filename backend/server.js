@@ -6,6 +6,8 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 require("dotenv").config();
 const connectDB = require("./config/db");
+const redisClient = require("./config/redis");
+const cacheService = require("./utils/cache");
 const Message = require("./models/chatModel");
 const cron = require('node-cron');
 const mongoose = require("mongoose");
@@ -35,15 +37,54 @@ const io = new Server(httpServer, {
 // Set port
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB first
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("Connected to MongoDB");
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
+// Initialize Redis and MongoDB connections
+async function initializeConnections() {
+  try {
+    // Connect to MongoDB
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("✅ Connected to MongoDB");
+
+    // Connect to Redis
+    await redisClient.connect();
+    console.log("✅ Redis connection initialized");
+
+    // Warm up cache with frequently accessed data
+    if (process.env.NODE_ENV === 'production') {
+      console.log("🔥 Warming up cache...");
+      await cacheService.warmNotesCache();
+    }
+
+    // Schedule cache warming every 6 hours
+    cron.schedule('0 */6 * * *', async () => {
+      console.log("🔄 Scheduled cache warming...");
+      try {
+        await cacheService.warmNotesCache();
+        console.log("✅ Cache warming completed");
+      } catch (error) {
+        console.error("❌ Cache warming failed:", error);
+      }
+    });
+
+    // Health check for cache every hour
+    cron.schedule('0 * * * *', async () => {
+      try {
+        const health = await cacheService.healthCheck();
+        if (health.status !== 'healthy') {
+          console.warn("⚠️ Cache health check failed:", health.message);
+        }
+      } catch (error) {
+        console.error("❌ Cache health check error:", error);
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Failed to initialize connections:", error);
     process.exit(1);
-  });
+  }
+}
+
+// Initialize connections
+initializeConnections();
 
 // Middleware
 app.use(cors({
@@ -119,6 +160,43 @@ app.get("/", (req, res) => {
   res.send("Welcome to Notora Backend");
 });
 
+// Cache health check endpoint
+app.get("/api/cache/health", async (req, res) => {
+  try {
+    const health = await cacheService.healthCheck();
+    const stats = await cacheService.getCacheStats();
+    res.json({ health, stats });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Cache management endpoints (admin only)
+app.get("/api/cache/stats", async (req, res) => {
+  try {
+    const stats = await cacheService.getCacheStats();
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/cache/clear", async (req, res) => {
+  try {
+    const { pattern } = req.body;
+    if (pattern) {
+      await cacheService.deletePattern(pattern);
+      res.json({ message: `Cache cleared for pattern: ${pattern}` });
+    } else {
+      // Clear all cache
+      await cacheService.deletePattern('*');
+      res.json({ message: "All cache cleared" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.use("/api/notes", noteRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/auth", googleAuthRoutes);
@@ -131,6 +209,13 @@ io.use(async (socket, next) => {
     const token = socket.handshake.auth.token;
     if (!token) {
       return next(new Error("Authentication token not provided"));
+    }
+
+    // Check cache first for user data
+    const cachedUser = await cacheService.getCachedAuthToken(token);
+    if (cachedUser) {
+      socket.user = cachedUser;
+      return next();
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -156,11 +241,22 @@ io.on("connection", (socket) => {
       console.log(`${socket.user.name} joined room: ${room}`);
       socket.join(room);
 
+      // Check cache first for chat messages
+      const cachedMessages = await cacheService.getCachedChatMessages(room);
+      if (cachedMessages) {
+        console.log(`📦 Cache hit for chat room: ${room}`);
+        socket.emit("room_messages", cachedMessages);
+        return;
+      }
+
       // Fetch recent messages for the room
       const messages = await Message.find({ room })
         .sort({ timestamp: 1 })
         .limit(50)
         .populate("sender", "name");
+
+      // Cache the messages
+      await cacheService.cacheChatMessages(room, messages);
 
       socket.emit("room_messages", messages);
     } catch (error) {
@@ -186,6 +282,9 @@ io.on("connection", (socket) => {
       await message.save();
       console.log("Message saved:", message);
 
+      // Invalidate chat cache for this room
+      await cacheService.invalidateChatCache(messageData.room);
+
       // Broadcast message to room
       io.to(messageData.room).emit("receive_message", {
         _id: message._id,
@@ -202,28 +301,24 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("leave_room", (room) => {
-    console.log(`${socket.user.name} left room: ${room}`);
-    socket.leave(room);
-  });
-
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.user.name);
+    console.log("User disconnected:", socket.user?.name);
   });
 });
 
-// // Delete messages older than 5 days every day at midnight
-// cron.schedule('0 0 * * *', async () => {
-//   const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
-//   try {
-//     await Message.deleteMany({ createdAt: { $lt: fiveDaysAgo } });
-//     console.log('Old chat messages deleted');
-//   } catch (err) {
-//     console.error('Error deleting old messages:', err);
-//   }
-// });
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down gracefully...');
+  await redisClient.disconnect();
+  process.exit(0);
+});
 
-// Start server
+process.on('SIGINT', async () => {
+  console.log('SIGINT received, shutting down gracefully...');
+  await redisClient.disconnect();
+  process.exit(0);
+});
+
 httpServer.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

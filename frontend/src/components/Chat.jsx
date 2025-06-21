@@ -22,6 +22,13 @@ function formatTime(dateString) {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  return date.toLocaleDateString([], { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
 function getInitials(name) {
   if (!name) return '?';
   const parts = name.trim().split(' ');
@@ -297,7 +304,9 @@ const Chat = () => {
                             : 'text-gray-500 text-left'
                         }`}
                       >
-                        {formatTime(message.timestamp)}
+                        <span>
+                          {formatDate(message.timestamp)} {formatTime(message.timestamp)}
+                        </span>
                       </div>
                     </div>
                   </div>

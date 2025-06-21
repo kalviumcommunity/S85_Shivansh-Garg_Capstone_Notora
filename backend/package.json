@@ -5,7 +5,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "cache:stats": "node scripts/cacheManager.js stats",
+    "cache:clear": "node scripts/cacheManager.js clear",
+    "cache:warm": "node scripts/cacheManager.js warm",
+    "cache:list": "node scripts/cacheManager.js list",
+    "cache:monitor": "node scripts/cacheManager.js monitor",
+    "cache:manager": "node scripts/cacheManager.js",
+    "redis:start": "redis-server",
+    "redis:stop": "redis-cli shutdown",
+    "redis:cli": "redis-cli"
   },
   "keywords": [],
   "author": "",

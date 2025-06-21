@@ -35,7 +35,7 @@ export default function AdminDashboard() {
                 })
             ]);
             setPendingNotes(pendingRes.data);
-            setAllNotes(allRes.data);
+            setAllNotes(Array.isArray(allRes.data) ? allRes.data : allRes.data.notes || []);
             setLoading(false);
         } catch (err) {
             setError('Error fetching notes');

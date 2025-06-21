@@ -67,7 +67,7 @@ export default function NotesPage() {
                     response = { data: await response.json() };
                 }
                 console.log('Notes fetched successfully:', response.data.length);
-                setNotes(response.data);
+                setNotes(Array.isArray(response.data) ? response.data : response.data.notes || []);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching notes:", err);

@@ -1,6 +1,8 @@
 const multer = require("multer");
 const axios = require("axios");
 const FormData = require("form-data");
+const crypto = require("crypto");
+const cacheService = require('../utils/cache');
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
@@ -34,6 +36,11 @@ const upload = multer({
     }
 });
 
+// Generate hash for image buffer to use as cache key
+const generateImageHash = (buffer) => {
+    return crypto.createHash('md5').update(buffer).digest('hex');
+};
+
 const performOCR = async (req, res) => {
     try {
         console.log("OCR request received");
@@ -43,6 +50,21 @@ const performOCR = async (req, res) => {
         if (!req.file) {
             console.log("No file in request");
             return res.status(400).json({ error: "No image file provided" });
+        }
+
+        // Generate hash for the image to use as cache key
+        const imageHash = generateImageHash(req.file.buffer);
+        console.log("Image hash:", imageHash);
+
+        // Check cache first
+        const cachedResult = await cacheService.getCachedOCRResult(imageHash);
+        if (cachedResult) {
+            console.log(`📦 Cache hit for OCR result: ${imageHash}`);
+            return res.json({
+                ...cachedResult,
+                _cached: true,
+                _cachedAt: new Date().toISOString()
+            });
         }
 
         console.log("Processing image with OCR.space API...");
@@ -98,12 +120,18 @@ const performOCR = async (req, res) => {
         console.log("OCR Results:", text);
         console.log("Confidence:", confidence);
 
-        res.json({
+        const ocrResult = {
             text: text,
             confidence: confidence,
             language: 'eng',
-            warning: confidence && confidence < 30 ? "Low confidence in text recognition" : undefined
-        });
+            warning: confidence && confidence < 30 ? "Low confidence in text recognition" : undefined,
+            processedAt: new Date().toISOString()
+        };
+
+        // Cache the OCR result
+        await cacheService.cacheOCRResult(imageHash, ocrResult);
+
+        res.json(ocrResult);
 
     } catch (error) {
         console.error("OCR processing error:", error);
@@ -119,7 +147,118 @@ const performOCR = async (req, res) => {
     }
 };
 
+// Batch OCR processing with caching
+const performBatchOCR = async (req, res) => {
+    try {
+        if (!req.files || req.files.length === 0) {
+            return res.status(400).json({ error: "No image files provided" });
+        }
+
+        if (req.files.length > 5) {
+            return res.status(400).json({ error: "Maximum 5 images allowed per batch" });
+        }
+
+        const results = [];
+        const uncachedImages = [];
+
+        // Check cache for all images first
+        for (const file of req.files) {
+            const imageHash = generateImageHash(file.buffer);
+            const cachedResult = await cacheService.getCachedOCRResult(imageHash);
+            
+            if (cachedResult) {
+                console.log(`📦 Cache hit for batch OCR: ${imageHash}`);
+                results.push({
+                    filename: file.originalname,
+                    ...cachedResult,
+                    _cached: true
+                });
+            } else {
+                uncachedImages.push({ file, imageHash });
+            }
+        }
+
+        // Process uncached images
+        for (const { file, imageHash } of uncachedImages) {
+            try {
+                const formData = new FormData();
+                formData.append('apikey', process.env.OCR_SPACE_API_KEY);
+                formData.append('language', 'eng');
+                formData.append('isOverlayRequired', 'false');
+                formData.append('OCREngine', '2');
+                formData.append('file', file.buffer, {
+                    filename: file.originalname,
+                    contentType: file.mimetype
+                });
+
+                const response = await axios.post('https://api.ocr.space/parse/image', formData, {
+                    headers: {
+                        ...formData.getHeaders(),
+                    },
+                });
+
+                if (response.data.IsErroredOnProcessing) {
+                    results.push({
+                        filename: file.originalname,
+                        error: response.data.ErrorMessage || 'OCR processing failed'
+                    });
+                    continue;
+                }
+
+                if (!response.data.ParsedResults || response.data.ParsedResults.length === 0) {
+                    results.push({
+                        filename: file.originalname,
+                        error: "No text detected in image"
+                    });
+                    continue;
+                }
+
+                const result = response.data.ParsedResults[0];
+                const text = result.ParsedText.trim();
+                const confidence = result.TextOverlay ? result.TextOverlay.MeanConfidence : null;
+
+                const ocrResult = {
+                    filename: file.originalname,
+                    text: text,
+                    confidence: confidence,
+                    language: 'eng',
+                    warning: confidence && confidence < 30 ? "Low confidence in text recognition" : undefined,
+                    processedAt: new Date().toISOString()
+                };
+
+                // Cache the result
+                await cacheService.cacheOCRResult(imageHash, ocrResult);
+
+                results.push(ocrResult);
+
+            } catch (error) {
+                console.error(`Error processing ${file.originalname}:`, error);
+                results.push({
+                    filename: file.originalname,
+                    error: error.message || "Failed to process image"
+                });
+            }
+        }
+
+        res.json({
+            results,
+            total: results.length,
+            cached: results.filter(r => r._cached).length,
+            processed: results.filter(r => !r._cached && !r.error).length,
+            errors: results.filter(r => r.error).length
+        });
+
+    } catch (error) {
+        console.error("Batch OCR processing error:", error);
+        res.status(500).json({
+            error: "Failed to process batch images",
+            details: error.message
+        });
+    }
+};
+
 module.exports = {
     upload,
     performOCR,
+    performBatchOCR
 }; 
