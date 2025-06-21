@@ -3,6 +3,7 @@ const router = express.Router();
 const { upload, handleMulterError } = require("../middlewares/upload");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 const { adminMiddleware } = require("../middlewares/adminMiddleware");
+const { rateLimits } = require("../middleware/rateLimit");
 
 const {
   getAllNotes,
@@ -16,15 +17,15 @@ const {
 } = require("../controllers/noteController");
 
 // Regular user routes
-router.get("/", getAllNotes);
-router.post("/", authMiddleware, upload, handleMulterError, uploadNote);
-router.get("/:id", authMiddleware, getNoteById);
-router.put("/:id", authMiddleware, upload, handleMulterError, updateNote);
-router.delete("/:id", authMiddleware, deleteNote);
+router.get("/", rateLimits.notes, getAllNotes);
+router.post("/", rateLimits.notesUpload, authMiddleware, upload, handleMulterError, uploadNote);
+router.get("/:id", rateLimits.notes, authMiddleware, getNoteById);
+router.put("/:id", rateLimits.notesUpload, authMiddleware, upload, handleMulterError, updateNote);
+router.delete("/:id", rateLimits.notes, authMiddleware, deleteNote);
 
 // Admin routes
-router.get("/admin/all", authMiddleware, adminMiddleware, getAllNotesAdmin);
-router.get("/admin/pending", authMiddleware, adminMiddleware, getPendingNotes);
-router.post("/admin/review/:noteId", authMiddleware, adminMiddleware, reviewNote);
+router.get("/admin/all", rateLimits.admin, authMiddleware, adminMiddleware, getAllNotesAdmin);
+router.get("/admin/pending", rateLimits.admin, authMiddleware, adminMiddleware, getPendingNotes);
+router.post("/admin/review/:noteId", rateLimits.admin, authMiddleware, adminMiddleware, reviewNote);
 
 module.exports = router;

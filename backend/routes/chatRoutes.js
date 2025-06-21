@@ -3,9 +3,10 @@ const router = express.Router();
 const Message = require('../models/chatModel');
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { adminMiddleware } = require('../middlewares/adminMiddleware');
+const { rateLimits } = require('../middleware/rateLimit');
 
 // Get messages for a specific room (public)
-router.get('/messages/:room', async (req, res) => {
+router.get('/messages/:room', rateLimits.chat, async (req, res) => {
   try {
     const messages = await Message.find({ room: req.params.room })
       .sort({ timestamp: 1 })
@@ -29,7 +30,7 @@ router.get('/messages/:room', async (req, res) => {
 });
 
 // Delete a message (admin only)
-router.delete('/messages/:messageId', authMiddleware, adminMiddleware, async (req, res) => {
+router.delete('/messages/:messageId', rateLimits.admin, authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const message = await Message.findById(req.params.messageId);
     
