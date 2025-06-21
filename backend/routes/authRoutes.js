@@ -1,6 +1,7 @@
 const express = require("express");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 const { register, login, getCurrentUser } = require("../controllers/authController");
+const { rateLimits } = require("../middleware/rateLimit");
 const router = express.Router();
 const passport = require("passport");
 require("../passport/google");
@@ -10,10 +11,11 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require("bcryptjs");
 
 // Google OAuth routes
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get("/google", rateLimits.public, passport.authenticate("google", { scope: ["profile", "email"] }));
 
 router.get(
   "/google/callback",
+  rateLimits.public,
   passport.authenticate("google", {
     successRedirect: process.env.FRONTEND_URL || "http://localhost:5173/",
     failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`,
@@ -21,7 +23,7 @@ router.get(
 );
 
 // Auth routes
-router.post("/logout", async (req, res) => {
+router.post("/logout", rateLimits.auth, async (req, res) => {
   const authHeader = req.header("Authorization") || "";
   const [scheme, token] = authHeader.split(" ");
 
@@ -52,7 +54,7 @@ router.post("/logout", async (req, res) => {
 router.get("/me", authMiddleware, getCurrentUser);
 
 // Login route
-router.post("/login", async (req, res) => {
+router.post("/login", rateLimits.auth, async (req, res) => {
   try {
     console.log("Login attempt:", { 
       email: req.body.email,
@@ -117,7 +119,7 @@ router.post("/login", async (req, res) => {
 });
 
 // Register route
-router.post("/register", async (req, res) => {
+router.post("/register", rateLimits.auth, async (req, res) => {
   try {
     console.log("Registration attempt:", { email: req.body.email });
     
@@ -174,7 +176,7 @@ router.post("/register", async (req, res) => {
 });
 
 // Update user premium status
-router.patch("/update-premium", async (req, res) => {
+router.patch("/update-premium", rateLimits.general, async (req, res) => {
   try {
     const { userId, isPremium } = req.body;
     

@@ -20,6 +20,7 @@ const authRoutes = require("./routes/authRoutes");
 const googleAuthRoutes = require("./routes/googleAuthRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const ocrRoutes = require("./routes/ocrRoutes");
+const rateLimitRoutes = require("./routes/rateLimitRoutes");
 
 require("./passport/google");
 
@@ -202,6 +203,7 @@ app.use("/api/auth", authRoutes);
 app.use("/auth", googleAuthRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/ocr", ocrRoutes);
+app.use("/api/rate-limit", rateLimitRoutes);
 
 // Socket.IO connection handling
 io.use(async (socket, next) => {
