@@ -13,6 +13,8 @@ node_modules
 dist-ssr
 *.local
 
+frontend\.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -29,3 +31,5 @@ S:\Coding\Kalvium\Notora\frontend\node_modules
 # Ignore frontend node package files
 package-lock.json
 node_modules/
+
+.env
