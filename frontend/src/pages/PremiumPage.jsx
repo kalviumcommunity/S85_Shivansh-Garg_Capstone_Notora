@@ -132,9 +132,11 @@ function loadRazorpayScript() {
   });
 }
 
+const API_BASE_URL = import.meta.env.VITE_API_URL.replace(/\/$/, '');
+
 const getRazorpayKey = async () => {
   try {
-    const res = await fetch("/api/payment/razorpay-key");
+    const res = await fetch(`${API_BASE_URL}/api/payment/razorpay-key`);
     const data = await res.json();
     return data.key;
   } catch {
@@ -180,7 +182,7 @@ export default function PremiumPage() {
         handler: async function (response) {
           // Call backend to upgrade user
           try {
-            const upgradeRes = await fetch("/api/auth/update-premium", {
+            const upgradeRes = await fetch(`${API_BASE_URL}/api/auth/update-premium`, {
               method: "PATCH",
               headers: {
                 "Content-Type": "application/json",
