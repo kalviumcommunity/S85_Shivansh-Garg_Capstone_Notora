@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/Badge"
 import { Crown, Star, Check, Download, Users, BookOpen, Zap, Shield, Headphones } from "lucide-react"
 import { trackUserAction } from "../utils/analytics"
-import PaymentForm from "@/components/PaymentForm"
 import { useAuth } from "@/context/AuthContext"
 import { useNavigate } from "react-router-dom"
 import { toast } from "react-hot-toast"
@@ -122,12 +121,32 @@ const benefits = [
   },
 ]
 
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
+const getRazorpayKey = async () => {
+  try {
+    const res = await fetch("/api/payment/razorpay-key");
+    const data = await res.json();
+    return data.key;
+  } catch {
+    return null;
+  }
+};
+
 export default function PremiumPage() {
-  const [showPayment, setShowPayment] = useState(false);
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const navigate = useNavigate();
 
-  const handleUpgradeClick = (plan) => {
+  const handleUpgradeClick = async (plan) => {
     if (!user) {
       toast.error('You are required to login to use this feature');
       navigate('/login');
@@ -140,17 +159,72 @@ export default function PremiumPage() {
     }
 
     if (plan.name === 'Premium') {
-      setShowPayment(true);
-      trackUserAction.upgradeToPremium(plan);
+      // Razorpay logic here
+      const res = await loadRazorpayScript();
+      if (!res) {
+        toast.error("Failed to load Razorpay. Please try again.");
+        return;
+      }
+      const key = await getRazorpayKey();
+      if (!key) {
+        toast.error("Unable to fetch payment key. Please try again later.");
+        return;
+      }
+      const options = {
+        key,
+        amount: 100, // ₹1 in paise
+        currency: "INR",
+        name: "Notora Premium Upgrade",
+        description: "Lifetime Premium Access",
+        image: "/faviconNotora.png",
+        handler: async function (response) {
+          // Call backend to upgrade user
+          try {
+            const upgradeRes = await fetch("/api/auth/update-premium", {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: user?.token ? `Bearer ${user.token}` : undefined,
+              },
+              credentials: "include",
+              body: JSON.stringify({ userId: user._id, isPremium: true })
+            });
+            if (upgradeRes.ok) {
+              const data = await upgradeRes.json();
+              // Update user context and localStorage
+              const updatedUser = {
+                ...user,
+                isPremium: true
+              };
+              setUser(updatedUser);
+              localStorage.setItem('user', JSON.stringify(updatedUser));
+              toast.success("You are now a premium user!");
+              navigate('/');
+            } else {
+              toast.error("Upgrade failed. Please contact support.");
+            }
+          } catch (err) {
+            toast.error("Upgrade failed. Please try again.");
+          }
+        },
+        prefill: {
+          name: user?.name || "",
+          email: user?.email || "",
+        },
+        theme: {
+          color: "#3399cc",
+        },
+        modal: {
+          ondismiss: function () {
+            toast("Payment cancelled.");
+          },
+        },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } else if (plan.name === 'Pro') {
       toast.info('Pro plan coming soon!');
     }
-  };
-
-  const handlePaymentSuccess = () => {
-    setShowPayment(false);
-    toast.success('Welcome to Premium!');
-    navigate('/');
   };
 
   const handlePremiumContentClick = (contentType) => {
@@ -161,24 +235,6 @@ export default function PremiumPage() {
     }
     trackUserAction.viewPremiumContent(contentType);
   };
-
-  if (showPayment) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <Card className="border border-[#e2e8f0]">
-          <CardHeader>
-            <CardTitle className="text-2xl text-center">Upgrade to Premium</CardTitle>
-            <CardDescription className="text-center">
-              Get access to all premium features for just ₹199
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <PaymentForm onSuccess={handlePaymentSuccess} />
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto px-4 py-8 space-y-16">
@@ -272,13 +328,25 @@ export default function PremiumPage() {
 
                 <Button
                   variant={plan.buttonVariant}
-                  className={`w-full transition-all duration-300 hover:scale-105 border border-[#e2e8f0] ${
-                    plan.popular ? "bg-[#bbd9e8] hover:bg-[#a8c8d8] text-white" : ""
+                  className={`w-full transition-all duration-300 border border-[#e2e8f0] ${
+                    plan.popular && !(plan.name === 'Premium' && user?.isPremium)
+                      ? "bg-[#bbd9e8] hover:bg-[#a8c8d8] text-white"
+                      : ""
+                  } ${
+                    plan.name === 'Premium' && user?.isPremium
+                      ? "bg-gray-300 text-gray-600 cursor-not-allowed font-semibold"
+                      : ""
                   }`}
                   onClick={() => handleUpgradeClick(plan)}
+                  disabled={plan.name === 'Premium' && user?.isPremium}
                 >
-                  {plan.buttonText}
+                  {plan.name === 'Premium' && user?.isPremium ? "You are already Premium" : plan.buttonText}
                 </Button>
+                {plan.name === 'Premium' && !user?.isPremium && (
+                  <div className="mt-2 text-xs text-blue-600 bg-blue-50 border border-blue-200 rounded px-2 py-1">
+                    <strong>Test Mode:</strong> Use dummy card details (e.g., 4111 1111 1111 1111), any future expiry, any CVV, and any OTP to complete the payment. No real money will be deducted.
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -334,11 +402,12 @@ export default function PremiumPage() {
                 </div>
 
                 <Button 
-                  className="w-full bg-gradient-to-r from-[#bbd9e8] to-[#a8c8d8] hover:from-[#a8c8d8] hover:to-[#bbd9e8] text-white transition-all duration-300 hover:scale-105 border border-[#e2e8f0]"
+                  className={`w-full bg-gradient-to-r from-[#bbd9e8] to-[#a8c8d8] hover:from-[#a8c8d8] hover:to-[#bbd9e8] text-white transition-all duration-300 hover:scale-105 border border-[#e2e8f0] ${user?.isPremium ? 'bg-gray-300 text-gray-600 cursor-not-allowed font-semibold' : ''}`}
                   onClick={() => trackUserAction.viewPremiumContent('note')}
+                  disabled={user?.isPremium}
                 >
                   <Crown className="w-4 h-4 mr-2" />
-                  Get Premium Access
+                  {user?.isPremium ? 'You are already Premium' : 'Get Premium Access'}
                 </Button>
               </CardContent>
             </Card>

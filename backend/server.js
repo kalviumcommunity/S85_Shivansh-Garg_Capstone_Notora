@@ -22,6 +22,7 @@ const chatRoutes = require("./routes/chatRoutes");
 const ocrRoutes = require("./routes/ocrRoutes");
 const rateLimitRoutes = require("./routes/rateLimitRoutes");
 const contactRoutes = require("./routes/contactRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
 
 require("./passport/google");
 
@@ -206,6 +207,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/ocr", ocrRoutes);
 app.use("/api/rate-limit", rateLimitRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Socket.IO connection handling
 io.use(async (socket, next) => {
