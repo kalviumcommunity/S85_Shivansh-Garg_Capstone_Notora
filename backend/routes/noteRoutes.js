@@ -3,7 +3,7 @@ const router = express.Router();
 const { upload, handleMulterError } = require("../middlewares/upload");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 const { adminMiddleware } = require("../middlewares/adminMiddleware");
-const { rateLimits } = require("../middleware/rateLimit");
+const { rateLimits } = require("../middlewares/rateLimit");
 
 const {
   getAllNotes,

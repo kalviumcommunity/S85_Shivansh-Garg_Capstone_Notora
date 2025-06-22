@@ -1,7 +1,7 @@
 const express = require("express");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 const { register, login, getCurrentUser } = require("../controllers/authController");
-const { rateLimits } = require("../middleware/rateLimit");
+const { rateLimits } = require("../middlewares/rateLimit");
 const router = express.Router();
 const passport = require("passport");
 require("../passport/google");

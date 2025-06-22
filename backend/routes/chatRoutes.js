@@ -3,7 +3,7 @@ const router = express.Router();
 const Message = require('../models/chatModel');
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { adminMiddleware } = require('../middlewares/adminMiddleware');
-const { rateLimits } = require('../middleware/rateLimit');
+const { rateLimits } = require('../middlewares/rateLimit');
 
 // Get messages for a specific room (public)
 router.get('/messages/:room', rateLimits.chat, async (req, res) => {
