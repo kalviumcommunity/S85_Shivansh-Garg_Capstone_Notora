@@ -16,6 +16,8 @@ const {
   getAllNotesAdmin
 } = require("../controllers/noteController");
 
+const { sendContactEmail } = require('../controllers/contactController');
+
 // Regular user routes
 router.get("/", rateLimits.notes, getAllNotes);
 router.post("/", rateLimits.notesUpload, authMiddleware, upload, handleMulterError, uploadNote);
@@ -27,5 +29,8 @@ router.delete("/:id", rateLimits.notes, authMiddleware, deleteNote);
 router.get("/admin/all", rateLimits.admin, authMiddleware, adminMiddleware, getAllNotesAdmin);
 router.get("/admin/pending", rateLimits.admin, authMiddleware, adminMiddleware, getPendingNotes);
 router.post("/admin/review/:noteId", rateLimits.admin, authMiddleware, adminMiddleware, reviewNote);
+
+// POST /api/contact
+router.post('/', sendContactEmail);
 
 module.exports = router;

@@ -15,6 +15,11 @@ import UploadPage from "./pages/UploadPage";
 import PremiumPage from "./pages/PremiumPage";
 import OCRPage from "./pages/OCRPage";
 import GoogleAnalytics from "./components/GoogleAnalytics";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
+import CancellationAndRefund from "./pages/CancellationAndRefund";
+import ShippingAndDelivery from "./pages/ShippingAndDelivery";
+import ContactUs from "./pages/ContactUs";
 // import PremiumPage from "./pages/PremiumPage";
 // import UploadPage from "./pages/UploadPage";
 
@@ -42,6 +47,11 @@ function AppContent() {
         <Route path="/upload" element={<UploadPage />} />
         <Route path="/premium" element={<PremiumPage />} />
         <Route path="/ocr" element={<OCRPage />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/cancellation-and-refund" element={<CancellationAndRefund />} />
+        <Route path="/shipping-and-delivery" element={<ShippingAndDelivery />} />
+        <Route path="/contact-us" element={<ContactUs />} />
         <Route path="*" element={<Navigate to="/" replace />} />
         {/* <Route path="/premium" element={<PremiumPage />} /> */}
         {/* <Route path="/upload" element={<UploadPage />} /> */}

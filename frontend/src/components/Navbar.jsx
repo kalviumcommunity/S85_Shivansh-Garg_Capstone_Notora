@@ -13,6 +13,7 @@ import {
   LogOut,
   Shield,
   Scan,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
@@ -142,7 +143,7 @@ export default function Navbar() {
                   {user.isPremium && <PremiumBadge className="ml-2" />}
                 </Button>
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white border rounded-xl shadow-xl animate-fade-in">
+                  <div className="absolute right-0 mt-2 w-56 bg-white border rounded-xl shadow-xl animate-fade-in z-50">
                     <div className="px-4 py-2 border-b font-semibold text-gray-700">
                       <div className="flex items-center justify-between">
                         <span>{user.name}</span>
@@ -162,6 +163,14 @@ export default function Navbar() {
                         Admin Dashboard
                       </Link>
                     )}
+                    {/* Legal & Contact Links */}
+                    <div className="border-t mt-1">
+                      <Link to="/privacy-policy" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setDropdownOpen(false)}>Privacy Policy</Link>
+                      <Link to="/terms-and-conditions" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setDropdownOpen(false)}>Terms & Conditions</Link>
+                      <Link to="/cancellation-and-refund" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setDropdownOpen(false)}>Cancellation & Refund</Link>
+                      <Link to="/shipping-and-delivery" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setDropdownOpen(false)}>Shipping & Delivery</Link>
+                      <Link to="/contact-us" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setDropdownOpen(false)}>Contact Us</Link>
+                    </div>
                     <button
                       onClick={handleLogout}
                       className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -173,12 +182,24 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <Link to="/login">
-                <Button variant="outline" className="space-x-2">
-                  <User className="w-4 h-4" />
-                  <span>Login</span>
-                </Button>
-              </Link>
+              <div className="relative" ref={dropdownRef}>
+                <Link to="/login">
+                  <Button variant="outline" className="space-x-2" onClick={() => setDropdownOpen((prev) => !prev)}>
+                    <User className="w-4 h-4" />
+                    <span>Login</span>
+                  </Button>
+                </Link>
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white border rounded-xl shadow-xl animate-fade-in z-50">
+                    {/* Legal & Contact Links for not logged in users */}
+                    <Link to="/privacy-policy" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setDropdownOpen(false)}>Privacy Policy</Link>
+                    <Link to="/terms-and-conditions" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setDropdownOpen(false)}>Terms & Conditions</Link>
+                    <Link to="/cancellation-and-refund" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setDropdownOpen(false)}>Cancellation & Refund</Link>
+                    <Link to="/shipping-and-delivery" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setDropdownOpen(false)}>Shipping & Delivery</Link>
+                    <Link to="/contact-us" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => setDropdownOpen(false)}>Contact Us</Link>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -204,14 +225,7 @@ export default function Navbar() {
                 <span>{item.name}</span>
               </Link>
             ))}
-            {user && (
-              <div className="px-3 py-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-700">{user.name}</span>
-                  {user.isPremium && <PremiumBadge />}
-                </div>
-              </div>
-            )}
+            {/* Removed Info links from mobile menu */}
           </div>
         </div>
       )}

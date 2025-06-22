@@ -1,5 +1,6 @@
 # Example backend ignores
 .env
+.env/development
 node_modules/
 package-lock.json
 
