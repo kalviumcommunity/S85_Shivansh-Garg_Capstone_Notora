@@ -15,7 +15,7 @@ export default function CancellationAndRefund() {
         <li>Refunds are only provided for accidental duplicate payments or technical errors.</li>
         <li>To request a refund, contact us within 7 days of the transaction.</li>
       </ul>
-      <p className="mt-6">For refund requests, email <a href="mailto:support@notora.com" className="text-blue-600 underline">support@notora.com</a> with your payment details.</p>
+      <p className="mt-6">For refund requests, email <a href="mailto:shivanshgarg007@gmail.com" className="text-blue-600 underline">shivanshgarg007@gmail.com</a> with your payment details.</p>
     </div>
   );
 } 

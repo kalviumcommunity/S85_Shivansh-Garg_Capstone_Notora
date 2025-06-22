@@ -21,7 +21,7 @@ export default function TermsAndConditions() {
         <li>Notora is not liable for any damages resulting from use of the platform.</li>
         <li>We do not guarantee the accuracy of user-uploaded content.</li>
       </ul>
-      <p className="mt-6">For any questions, contact us at <a href="mailto:support@notora.com" className="text-blue-600 underline">support@notora.com</a>.</p>
+      <p className="mt-6">For any questions, contact us at <a href="mailto:shivanshgarg007@gmail.com" className="text-blue-600 underline">shivanshgarg007@gmail.com</a>.</p>
     </div>
   );
 } 

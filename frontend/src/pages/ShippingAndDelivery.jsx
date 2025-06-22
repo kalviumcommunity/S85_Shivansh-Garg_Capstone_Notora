@@ -14,7 +14,7 @@ export default function ShippingAndDelivery() {
       <ul className="list-disc ml-6 mb-4">
         <li>If you experience issues accessing your content, please contact our support team.</li>
       </ul>
-      <p className="mt-6">For support, email <a href="mailto:support@notora.com" className="text-blue-600 underline">support@notora.com</a>.</p>
+      <p className="mt-6">For support, email <a href="mailto:shivanshgarg007@gmail.com" className="text-blue-600 underline">shivanshgarg007@gmail.com</a>.</p>
     </div>
   );
 } 
