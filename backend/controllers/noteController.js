@@ -295,14 +295,14 @@ const getPendingNotes = async (req, res) => {
 
 const reviewNote = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { noteId } = req.params;
     const { status, adminComment } = req.body;
 
     if (!['approved', 'rejected'].includes(status)) {
       return res.status(400).json({ error: "Invalid status. Must be 'approved' or 'rejected'" });
     }
 
-    const note = await Note.findById(id);
+    const note = await Note.findById(noteId);
     if (!note) {
       return res.status(404).json({ error: "Note not found" });
     }
@@ -318,7 +318,7 @@ const reviewNote = async (req, res) => {
     await note.save();
 
     // Invalidate relevant caches
-    await cacheService.invalidateNoteCache(id);
+    await cacheService.invalidateNoteCache(noteId);
 
     // Send notification to user (you can implement this later)
     // await sendNotificationToUser(note.uploadedBy, `Your note "${note.title}" has been ${status}`);
