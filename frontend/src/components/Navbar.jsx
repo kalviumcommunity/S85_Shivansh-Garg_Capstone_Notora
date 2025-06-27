@@ -73,6 +73,14 @@ export default function Navbar() {
     }
   };
 
+  // Helper to get initials from user name
+  const getInitials = (name) => {
+    if (!name) return "?";
+    const parts = name.trim().split(" ");
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
   return (
     <nav className="sticky top-0 z-50 bg-white/70 backdrop-blur-md border-b border-[#e2e8f0] shadow-md rounded-b-2xl transition-all duration-300">
       <div className="container mx-auto px-4">
@@ -139,7 +147,10 @@ export default function Navbar() {
                   onClick={() => setDropdownOpen((prev) => !prev)}
                   className="flex items-center space-x-2"
                 >
-                  <User className="w-5 h-5" />
+                  {/* User Initials Avatar */}
+                  <span className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c471f5] to-[#fa71cd] text-white flex items-center justify-center font-bold text-lg shadow border-2 border-white">
+                    {getInitials(user.name)}
+                  </span>
                   {user.isPremium && <PremiumBadge className="ml-2" />}
                 </Button>
                 {dropdownOpen && (
