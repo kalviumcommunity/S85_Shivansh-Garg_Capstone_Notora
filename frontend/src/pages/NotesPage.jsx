@@ -26,6 +26,7 @@ import {
     Upload,
     Star,
     Eye,
+    ArrowUp,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { trackUserAction } from "../utils/analytics";
@@ -41,6 +42,7 @@ export default function NotesPage() {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const [showScroll, setShowScroll] = useState(false);
 
     useEffect(() => {
         console.log('NotesPage - Auth state:', {
@@ -80,6 +82,18 @@ export default function NotesPage() {
         fetchNotes();
     }, [api, user, token]);
 
+    useEffect(() => {
+        const handleScroll = () => {
+            setShowScroll(window.scrollY > 200);
+        };
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
     const filteredNotes = notes
         .filter(
             (note) =>
@@ -114,6 +128,7 @@ export default function NotesPage() {
     };
 
     return (
+        <>
         <div className="space-y-8 px-6 md:px-12 lg:px-24 pt-8 pb-16">
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -334,5 +349,16 @@ export default function NotesPage() {
             )}
 
         </div>
+        {showScroll && (
+            <button
+                onClick={scrollToTop}
+                className="fixed bottom-8 right-6 z-50 p-3 rounded-full border-2 border-white bg-gradient-to-br from-[#9AC9DE] via-[#7bbad2] to-[#5fa6c7] text-white shadow-xl hover:scale-110 hover:shadow-2xl focus:ring-4 focus:ring-[#9AC9DE]/40 transition-all duration-300"
+                aria-label="Scroll to top"
+                style={{ boxShadow: '0 4px 24px 0 rgba(90, 169, 205, 0.18)' }}
+            >
+                <ArrowUp className="w-6 h-6" />
+            </button>
+        )}
+        </>
     );
 }
