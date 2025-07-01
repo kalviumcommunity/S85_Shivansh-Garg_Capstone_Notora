@@ -1,0 +1,24 @@
+meta {
+  name: Signup
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:5000/api/auth/signup
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Test User 2",
+    "email": "me@examplee2.com",
+    "password": "secret"
+  }
+  
+}

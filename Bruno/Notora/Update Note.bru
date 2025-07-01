@@ -1,0 +1,17 @@
+meta {
+  name: Update Note
+  type: http
+  seq: 4
+}
+
+put {
+  url: http://localhost:5000/api/notes/update/67f6c15ba4b4e665cd6a22f4
+  body: multipartForm
+  auth: none
+}
+
+body:multipart-form {
+  title: DSA Notes Updated for C++
+  description: Used PUT to edit fields
+  subject: java
+}

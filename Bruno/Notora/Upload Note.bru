@@ -1,0 +1,24 @@
+meta {
+  name: Upload Note
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:5000/api/notes/upload
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  key: content-value
+  value: application/json
+}
+
+body:multipart-form {
+  title: DSA Notes
+  description: Includes classes and inheritance
+  subject: C++
+  uploadedBy: 67f60e19c1814431a703485f
+  file: @file(/C:/Users/shiva/Downloads/Screenshot 2025-04-05 1234155.png)
+}

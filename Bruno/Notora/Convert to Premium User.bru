@@ -1,0 +1,22 @@
+meta {
+  name: Convert to Premium User
+  type: http
+  seq: 11
+}
+
+patch {
+  url: http://localhost:5000/api/auth/update-premium
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+     {
+       "userId": "684c397107320ce7f37b2604",
+       "isPremium": true
+     }
+}

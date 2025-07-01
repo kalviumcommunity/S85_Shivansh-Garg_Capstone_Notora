@@ -1,0 +1,11 @@
+meta {
+  name: Get All Notes
+  type: http
+  seq: 1
+}
+
+get {
+  url: http://localhost:5000/api/notes
+  body: formUrlEncoded
+  auth: none
+}
